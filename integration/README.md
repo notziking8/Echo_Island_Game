@@ -16,8 +16,9 @@ Merged on September 25, 2026:
 - Travel_System: `d347283` — expanded island, player, camera, interactions, checkpoints.
 - Combat_System: `dcb4cd1` — enemy archetypes, health/defense/status states and Echo receiver.
 
-Remote `main` is still the initial project (`e896afc`). These merges and the new
-composition scene are local; no changes have been published to main or team branches.
+The combined playtest build is published on `integration/echo-team`. Select that
+branch on GitHub to download it. Publishing it does not change main or the three
+system branches. See the repository README for quick playtest instructions.
 
 ## How the systems fit together
 
@@ -120,10 +121,11 @@ git merge origin/Travel_System
 git merge origin/Combat_System
 ```
 
-The existing push hook remains Echo-only and deliberately blocks this integration
-branch. It has not been disabled or bypassed. Publishing integration needs a
-separately reviewed Git workflow; do not force it through Echo's branch or main.
-The integration branch has no upstream, avoiding accidental main pushes.
+The push hook allows integration/echo-team to push only to the matching remote
+branch, including initial creation, and rejects non-fast-forward updates. It keeps
+the Echo-only file checks for Echo_System and blocks main and other destinations.
+The original Echo checkout retains its original Echo-only guard. This integration
+branch tracks origin/integration/echo-team after publication.
 
 ## Verification
 
