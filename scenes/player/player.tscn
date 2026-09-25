@@ -1,0 +1,58 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_8afob"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dovo2"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gmlin"]
+albedo_color = Color(0.2, 0.6, 0.85, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_lvxji"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p47bc"]
+albedo_color = Color(0.1, 0.1, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_75vfm"]
+size = Vector3(0.3, 0.15, 0.2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_camer"]
+radius = 0.2
+
+[node name="Player" type="CharacterBody3D" unique_id=1149951434]
+script = ExtResource("1_8afob")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=595617993]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_dovo2")
+
+[node name="Visuals" type="Node3D" parent="." unique_id=874460033]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="Visuals" unique_id=355106901]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+material_override = SubResource("StandardMaterial3D_gmlin")
+mesh = SubResource("CapsuleMesh_lvxji")
+
+[node name="VisorMesh" type="MeshInstance3D" parent="Visuals" unique_id=1999018861]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -0.35)
+material_override = SubResource("StandardMaterial3D_p47bc")
+mesh = SubResource("BoxMesh_75vfm")
+
+[node name="InteractionRay" type="RayCast3D" parent="Visuals" unique_id=2091823746]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(0, 0, -2.5)
+collide_with_areas = true
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=864059863]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1059574849]
+shape = SubResource("SphereShape3D_camer")
+spring_length = 3.5
+margin = 0.1
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=1363711902]
+current = true

@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interaction/test_interactable.gd" id="1_4u6ve"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_d31e8"]
+height = 1.2
+radius = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m6k5e"]
+albedo_color = Color(0.85, 0.65, 0.15, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_q8k4x"]
+top_radius = 0.4
+bottom_radius = 0.5
+height = 1.2
+
+[node name="TestInteractable" type="Area3D"]
+script = ExtResource("1_4u6ve")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("CylinderShape3D_d31e8")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_m6k5e")
+mesh = SubResource("CylinderMesh_q8k4x")
