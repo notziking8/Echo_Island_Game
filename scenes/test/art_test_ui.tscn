@@ -1,0 +1,159 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/test/art_test_ui.gd" id="1_fw7hn"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ejoi8"]
+bg_color = Color(0.1, 0.14, 0.2, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.47843137, 0.34901962, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ej173"]
+bg_color = Color(0.08, 0.12, 0.18, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.81960785, 0.4, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rvrvn"]
+bg_color = Color(0.1, 0.08, 0.22, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.48235294, 0.17254902, 0.7490196, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.48, 0.17, 0.75, 0.4)
+shadow_size = 10
+
+[node name="ArtTestUI" type="CanvasLayer" unique_id=1923521369]
+script = ExtResource("1_fw7hn")
+
+[node name="UIRoot" type="Control" parent="." unique_id=1216206003]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="HUDContainer" type="Control" parent="UIRoot" unique_id=803285886]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="RelicBadge" type="PanelContainer" parent="UIRoot/HUDContainer" unique_id=1697762885]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 62.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_ejoi8")
+
+[node name="RelicMargin" type="MarginContainer" parent="UIRoot/HUDContainer/RelicBadge" unique_id=595231092]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="RelicLabel" type="Label" parent="UIRoot/HUDContainer/RelicBadge/RelicMargin" unique_id=13308629]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.81960785, 0.4, 1)
+text = "✦ Relics: 0 / 5"
+horizontal_alignment = 1
+
+[node name="PopupContainer" type="Control" parent="UIRoot" unique_id=887068586]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TutorialPanel" type="PanelContainer" parent="UIRoot/PopupContainer" unique_id=1061129632]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -90.0
+offset_right = 220.0
+offset_bottom = -30.0
+pivot_offset = Vector2(220, 30)
+theme_override_styles/panel = SubResource("StyleBoxFlat_ej173")
+
+[node name="TutorialMargin" type="MarginContainer" parent="UIRoot/PopupContainer/TutorialPanel" unique_id=1622564170]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 10
+
+[node name="TutorialLabel" type="Label" parent="UIRoot/PopupContainer/TutorialPanel/TutorialMargin" unique_id=161990388]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "WASD — Move"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BannerContainer" type="Control" parent="UIRoot" unique_id=105063620]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="BannerPanel" type="PanelContainer" parent="UIRoot/BannerContainer" unique_id=1467371245]
+visible = false
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.32
+anchor_right = 0.5
+anchor_bottom = 0.32
+offset_left = -260.0
+offset_top = -65.0
+offset_right = 260.0
+offset_bottom = 65.0
+pivot_offset = Vector2(260, 65)
+theme_override_styles/panel = SubResource("StyleBoxFlat_rvrvn")
+
+[node name="BannerMargin" type="MarginContainer" parent="UIRoot/BannerContainer/BannerPanel" unique_id=1325564856]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="UIRoot/BannerContainer/BannerPanel/BannerMargin" unique_id=1588736479]
+layout_mode = 2
+
+[node name="BannerTitle" type="Label" parent="UIRoot/BannerContainer/BannerPanel/BannerMargin/VBox" unique_id=640373177]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.81960785, 0.4, 1)
+text = "★ Island Relic Claimed! ★"
+horizontal_alignment = 1
+
+[node name="BannerSubtitle" type="Label" parent="UIRoot/BannerContainer/BannerPanel/BannerMargin/VBox" unique_id=1201843683]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45490196, 0.78039217, 0.9254902, 1)
+text = "Exploration Complete!"
+horizontal_alignment = 1

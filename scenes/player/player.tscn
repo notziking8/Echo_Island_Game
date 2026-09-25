@@ -1,0 +1,258 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_8afob"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dovo2"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gmlin"]
+albedo_color = Color(0.45490196, 0.78039217, 0.9254902, 1)
+roughness = 0.85
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_lvxji"]
+radius = 0.31
+height = 0.62
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p47bc"]
+albedo_color = Color(0.12, 0.15, 0.2, 1)
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_75vfm"]
+top_radius = 0.36
+bottom_radius = 0.36
+height = 0.07
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0owmy"]
+albedo_color = Color(1, 0.47843137, 0.34901962, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_qek5x"]
+size = Vector3(0.12, 0.09, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5gtgg"]
+albedo_color = Color(1, 0.81960785, 0.4, 1)
+roughness = 0.85
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_h17s1"]
+top_radius = 0.35
+bottom_radius = 0.33
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_je7p5"]
+albedo_color = Color(1, 0.88, 0.76, 1)
+roughness = 0.75
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_fm80t"]
+top_radius = 0.13
+bottom_radius = 0.12
+height = 0.22
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gx1jg"]
+albedo_color = Color(0.48, 0.34, 0.22, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_ugbui"]
+size = Vector3(0.22, 0.2, 0.32)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fcs02"]
+radius = 0.1
+height = 0.44
+
+[sub_resource type="SphereMesh" id="SphereMesh_myrg7"]
+radius = 0.1
+height = 0.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_kvlxm"]
+size = Vector3(0.42, 0.44, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uf5tr"]
+albedo_color = Color(0.49411765, 0.8509804, 0.34117648, 1)
+roughness = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_lgqa7"]
+top_radius = 0.09
+bottom_radius = 0.09
+height = 0.44
+
+[sub_resource type="BoxMesh" id="BoxMesh_8ydkj"]
+size = Vector3(0.28, 0.2, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3j4b4"]
+albedo_color = Color(0.48235294, 0.17254902, 0.7490196, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(0.48235294, 0.17254902, 0.7490196, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_yj68g"]
+top_radius = 0.28
+bottom_radius = 0.32
+height = 0.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_ioxgp"]
+size = Vector3(0.12, 0.14, 0.1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_cnsyf"]
+radius = 0.32
+height = 0.64
+
+[sub_resource type="BoxMesh" id="BoxMesh_007i1"]
+size = Vector3(0.42, 0.13, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6cv16"]
+albedo_color = Color(1, 0.81960785, 0.4, 1)
+roughness = 0.85
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_j4nxn"]
+top_radius = 0.56
+bottom_radius = 0.58
+height = 0.05
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_28m0y"]
+top_radius = 0.3
+bottom_radius = 0.35
+height = 0.26
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_uniwh"]
+top_radius = 0.355
+bottom_radius = 0.36
+height = 0.07
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_iqsei"]
+radius = 0.2
+
+[node name="Player" type="CharacterBody3D" unique_id=839950809]
+script = ExtResource("1_8afob")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=410405618]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_dovo2")
+
+[node name="Visuals" type="Node3D" parent="." unique_id=178617985]
+
+[node name="TunicMesh" type="MeshInstance3D" parent="Visuals" unique_id=379258014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.96, 0)
+material_override = SubResource("StandardMaterial3D_gmlin")
+mesh = SubResource("CapsuleMesh_lvxji")
+
+[node name="BeltMesh" type="MeshInstance3D" parent="Visuals" unique_id=2020842148]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+material_override = SubResource("StandardMaterial3D_p47bc")
+mesh = SubResource("CylinderMesh_75vfm")
+
+[node name="BeltBuckleMesh" type="MeshInstance3D" parent="Visuals" unique_id=1630966519]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, -0.36)
+material_override = SubResource("StandardMaterial3D_0owmy")
+mesh = SubResource("BoxMesh_qek5x")
+
+[node name="ShortsMesh" type="MeshInstance3D" parent="Visuals" unique_id=226193716]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+material_override = SubResource("StandardMaterial3D_5gtgg")
+mesh = SubResource("CylinderMesh_h17s1")
+
+[node name="LeftLegMesh" type="MeshInstance3D" parent="Visuals" unique_id=944089963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.32, 0)
+material_override = SubResource("StandardMaterial3D_je7p5")
+mesh = SubResource("CylinderMesh_fm80t")
+
+[node name="RightLegMesh" type="MeshInstance3D" parent="Visuals" unique_id=877530216]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.32, 0)
+material_override = SubResource("StandardMaterial3D_je7p5")
+mesh = SubResource("CylinderMesh_fm80t")
+
+[node name="LeftBootMesh" type="MeshInstance3D" parent="Visuals" unique_id=1713076457]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.1, -0.04)
+material_override = SubResource("StandardMaterial3D_gx1jg")
+mesh = SubResource("BoxMesh_ugbui")
+
+[node name="RightBootMesh" type="MeshInstance3D" parent="Visuals" unique_id=1006203401]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.1, -0.04)
+material_override = SubResource("StandardMaterial3D_gx1jg")
+mesh = SubResource("BoxMesh_ugbui")
+
+[node name="LeftArmMesh" type="MeshInstance3D" parent="Visuals" unique_id=268495445]
+transform = Transform3D(0.9781476, -0.2079117, 0, 0.2079117, 0.9781476, 0, 0, 0, 1, -0.38, 0.9, 0)
+material_override = SubResource("StandardMaterial3D_gmlin")
+mesh = SubResource("CapsuleMesh_fcs02")
+
+[node name="RightArmMesh" type="MeshInstance3D" parent="Visuals" unique_id=1371213965]
+transform = Transform3D(0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0, 1, 0.38, 0.9, 0)
+material_override = SubResource("StandardMaterial3D_gmlin")
+mesh = SubResource("CapsuleMesh_fcs02")
+
+[node name="LeftHandMesh" type="MeshInstance3D" parent="Visuals" unique_id=1049522733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 0.66, 0)
+material_override = SubResource("StandardMaterial3D_je7p5")
+mesh = SubResource("SphereMesh_myrg7")
+
+[node name="RightHandMesh" type="MeshInstance3D" parent="Visuals" unique_id=1385735348]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.43, 0.66, 0)
+material_override = SubResource("StandardMaterial3D_je7p5")
+mesh = SubResource("SphereMesh_myrg7")
+
+[node name="BackpackMesh" type="MeshInstance3D" parent="Visuals" unique_id=361658161]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0.28)
+material_override = SubResource("StandardMaterial3D_gx1jg")
+mesh = SubResource("BoxMesh_kvlxm")
+
+[node name="BedrollMesh" type="MeshInstance3D" parent="Visuals" unique_id=661549690]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.2, 0.28)
+material_override = SubResource("StandardMaterial3D_uf5tr")
+mesh = SubResource("CylinderMesh_lgqa7")
+
+[node name="PocketMesh" type="MeshInstance3D" parent="Visuals" unique_id=928975218]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.42)
+material_override = SubResource("StandardMaterial3D_0owmy")
+mesh = SubResource("BoxMesh_8ydkj")
+
+[node name="NeckerchiefMesh" type="MeshInstance3D" parent="Visuals" unique_id=187329087]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+material_override = SubResource("StandardMaterial3D_3j4b4")
+mesh = SubResource("CylinderMesh_yj68g")
+
+[node name="NeckerchiefKnotMesh" type="MeshInstance3D" parent="Visuals" unique_id=2028461315]
+transform = Transform3D(0.70710677, 0.35355338, 0.6123724, 0, 0.8660254, -0.5, -0.70710677, 0.35355338, 0.6123724, 0, 1.16, -0.26)
+material_override = SubResource("StandardMaterial3D_3j4b4")
+mesh = SubResource("BoxMesh_ioxgp")
+
+[node name="HeadMesh" type="MeshInstance3D" parent="Visuals" unique_id=1993647049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+material_override = SubResource("StandardMaterial3D_je7p5")
+mesh = SubResource("SphereMesh_cnsyf")
+
+[node name="VisorMesh" type="MeshInstance3D" parent="Visuals" unique_id=334576341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.43, -0.22)
+material_override = SubResource("StandardMaterial3D_p47bc")
+mesh = SubResource("BoxMesh_007i1")
+
+[node name="HatBrimMesh" type="MeshInstance3D" parent="Visuals" unique_id=1257038410]
+transform = Transform3D(1, 0, 0, 0, 0.9975641, -0.06975647, 0, 0.06975647, 0.9975641, 0, 1.6, -0.01)
+material_override = SubResource("StandardMaterial3D_6cv16")
+mesh = SubResource("CylinderMesh_j4nxn")
+
+[node name="HatCrownMesh" type="MeshInstance3D" parent="Visuals" unique_id=1259780558]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.73, 0)
+material_override = SubResource("StandardMaterial3D_6cv16")
+mesh = SubResource("CylinderMesh_28m0y")
+
+[node name="HatBandMesh" type="MeshInstance3D" parent="Visuals" unique_id=198629162]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
+material_override = SubResource("StandardMaterial3D_0owmy")
+mesh = SubResource("CylinderMesh_uniwh")
+
+[node name="InteractionRay" type="RayCast3D" parent="Visuals" unique_id=1681056880]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(0, 0, -2.5)
+collide_with_areas = true
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=383212776]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1547549821]
+shape = SubResource("SphereShape3D_iqsei")
+spring_length = 3.5
+margin = 0.1
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=1893026171]
+current = true
