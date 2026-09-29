@@ -69,6 +69,9 @@ func run() -> void:
 			_interact_stone(stage)
 		for enemy in stage.enemies:
 			enemy.take_damage(enemy.health, Vector3.INF)
+		if "stun" in stage.completed:
+			stage.completed.erase("stun")
+			check("stun" not in stage.missing_tasks(), "defeating guard without stun cannot softlock exit")
 		check(stage.can_exit(), "scene %d exits after actual receiver success" % (i + 1))
 		check(stage.effects.rings.size() == 12, "VFX pool bounded")
 		game.echo.cooldowns.clear()

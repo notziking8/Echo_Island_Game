@@ -73,12 +73,14 @@ stay defeated during the scene, including after R; refresh/restart starts a new 
 
 ## Verification
 
-- Godot 4.7.2 desktop: campaign suite **120 checks, zero failures**; Echo **51**,
+- Godot 4.7.2 desktop: campaign suite **122 checks, zero failures**; Echo **51**,
   all-power **56**, integration **41**, and Combat suite passed.
 - Tests load all nine scenes, enforce stone prerequisites, use F collection,
   send actual requests through the existing receivers, verify success before
   progression, confirm generations/ancestral powers and final ending. These are
   automated contract tests, **not** a claimed uninterrupted human playthrough.
+  If a guard is defeated from behind before being stunned, the exit does not
+  require stunning its dead body; the existing Combat owner permits that strategy.
 - Real OpenGL captures of title, Arrival, Earth Ruins, and Core inspected.
   Fixed terrain skirt overlap, washed-out lighting, low-contrast notifications,
   objective panel overflow, and ungrounded decorative placement found in review.

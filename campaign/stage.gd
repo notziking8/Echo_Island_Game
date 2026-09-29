@@ -276,6 +276,10 @@ func enemies_defeated() -> bool:
 func missing_tasks() -> Array[String]:
 	var missing: Array[String] = []
 	for task: String in data.tasks:
+		# A player can defeat a guarded enemy from behind using the unchanged owner.
+		# Never demand a status effect on an already-dead, ineligible receiver.
+		if task == "stun" and enemies_defeated():
+			continue
 		if task not in completed:
 			missing.append(task)
 	return missing
