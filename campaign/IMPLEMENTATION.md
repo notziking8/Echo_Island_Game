@@ -84,6 +84,9 @@ stay defeated during the scene, including after R; refresh/restart starts a new 
   objective panel overflow, and ungrounded decorative placement found in review.
 - Original integration tests still exercise swim/glide/dash, wheel movement lock,
   range rejection, late combat registration, checkpoints and existing interactions.
+- Linux CI reports a retained resource on shutdown in the unchanged Combat test
+  suite, after its success marker. CI allows that exact one-resource shutdown
+  message only for that suite and still rejects all other errors and failed tests.
 - Reproduce: `godot --headless --path . --script res://campaign/tests/run_tests.gd`.
   Capture: `godot --path . --script res://campaign/tests/capture.gd -- --output=ABSOLUTE_FOLDER`.
 
