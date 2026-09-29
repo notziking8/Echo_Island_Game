@@ -50,7 +50,10 @@ jobs:
       - name: Export the playable web build
         run: |
           mkdir -p build
-          "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --headless --path . --export-release Web build/index.html
+          # Version the pack/runtime URLs so a cached old .pck cannot be paired
+          # with a newly deployed page. Keep the public entry URL stable.
+          "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --headless --path . --export-release Web "build/game-${GITHUB_SHA}.html"
+          mv "build/game-${GITHUB_SHA}.html" build/index.html
           touch build/.nojekyll
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
