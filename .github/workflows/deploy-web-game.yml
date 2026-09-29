@@ -30,6 +30,14 @@ jobs:
           unzip -q templates.tpz -d "$RUNNER_TEMP/templates"
           mkdir -p "$HOME/.local/share/godot/export_templates"
           mv "$RUNNER_TEMP/templates/templates" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+      - name: Import and test the campaign and protected systems
+        run: |
+          GODOT="$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
+          "$GODOT" --headless --editor --import --quit --path .
+          for suite in campaign/tests/run_tests.gd systems/combat/tests/run_tests.gd systems/echo/tests/run_tests.gd systems/echo/tests/run_powers_tests.gd integration/tests/run_tests.gd; do
+            timeout 60 "$GODOT" --headless --path . --script "res://$suite" 2>&1 | tee "$RUNNER_TEMP/test.log"
+            if grep -E 'SCRIPT ERROR|FAIL:|ERROR:' "$RUNNER_TEMP/test.log"; then exit 1; fi
+          done
       - name: Export the playable web build
         run: |
           mkdir -p build

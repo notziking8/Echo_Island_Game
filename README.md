@@ -1,5 +1,29 @@
 # Echo_Island_Game
 
+## Story campaign (main)
+
+[Play Echo Island in your browser](https://notziking8.github.io/Echo_Island_Game/).
+On `main`, open `project.godot` in Godot 4.7.2 and press **F5** for the new title
+screen and nine-scene campaign. Press any key/click to start. Powers are discovered
+in story order; they are not all unlocked at the beginning.
+
+WASD/arrows move, mouse looks, Space jumps, left click strikes a targeted enemy
+within 3m. Hold Tab for the Echo wheel; Q uses the selected power; E uses your
+generation's personal power. F collects nearby awakened stones and continues
+through completed exit arches. X dismisses, R respawns, Esc releases the mouse.
+Five optional relics are spread across Arrival, Overgrown Path, Flooded Trail,
+Forbidden Interior, and Island Core.
+
+This is a **procedural-art playable first pass**, not the finished reference art.
+The inherited Combat/Echo/Traversal logic is preserved. Player health/damage,
+dodge, ranged firing, and multi-element boss phases still need their owners'
+implementations. Cosmetic bows/tridents do not change the existing melee attack.
+See [campaign/IMPLEMENTATION.md](campaign/IMPLEMENTATION.md) for the scope audit,
+scene walkthrough, test evidence, asset approach, and remaining work.
+
+The original all-powers integration playground is still available by opening
+`integration/team_game.tscn` and pressing **F6**.
+
 ## Combined playtest build
 
 Use the **integration/echo-team** branch for the combined Echo, Traversal and
