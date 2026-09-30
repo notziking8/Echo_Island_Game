@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://do6lv0xugd0t7"]
 
-[ext_resource type="Script" path="res://integration/team_game.gd" id="1"]
+[ext_resource type="Script" uid="uid://ejj88qa7i8sk" path="res://integration/team_game.gd" id="1"]
 
-[node name="EchoIslandIntegrated" type="Node3D"]
+[node name="EchoIslandIntegrated" type="Node3D" unique_id=191951541]
 script = ExtResource("1")
