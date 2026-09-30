@@ -111,3 +111,43 @@ func _process(delta: float) -> void:
 		arms[i].rotation.x = -cycle * sign_value * 0.65 if grounded else -0.6
 	arms[1].rotation.x -= sin((0.4 - swing) / 0.4 * PI) * minf(swing * 10, 1) * 2.1
 	arms[0].rotation.x -= interaction * 1.7
+	_apply_combat_pose(delta)
+
+func _apply_combat_pose(delta: float) -> void:
+	# Retargetable joint poses on the existing rig; no alternate character geometry.
+	var controller: Node = actor.get("combat_controller")
+	if not is_instance_valid(controller):
+		return
+	var lean := 0.0
+	if controller.phase == "dodge":
+		lean = -0.7
+		torso.position.y -= 0.22
+		arms[0].rotation.z = -0.45
+		arms[1].rotation.z = 0.45
+		legs[0].rotation.x = 0.8
+		legs[1].rotation.x = -0.6
+	elif not controller.attack.is_empty():
+		var data: Dictionary = controller.attack
+		var twist: float
+		if controller.phase == "startup":
+			twist = lerpf(0, -0.75, smoothstep(0, data.startup, controller.elapsed))
+		elif controller.phase == "active":
+			twist = lerpf(-0.75, 1.0, smoothstep(data.startup, data.startup + data.active, controller.elapsed))
+		else:
+			twist = lerpf(1.0, 0.0, smoothstep(data.startup + data.active, preload("res://systems/combat/attack_data.gd").duration(data), controller.elapsed))
+		if controller.combo_index == 1:
+			twist *= -1
+		torso.rotation.y = twist
+		arms[1].rotation.x = -1.1 - twist * 0.6
+		arms[1].rotation.z = -twist * 0.7
+		arms[0].rotation.x = -0.5 + twist * 0.2
+		lean = -0.15
+	elif controller.phase == "hurt":
+		lean = 0.3
+	elif controller.phase == "dead":
+		lean = 0.65
+		torso.position.y -= 0.35
+	else:
+		arms[0].rotation.z = lerpf(arms[0].rotation.z, 0, delta * 12)
+		arms[1].rotation.z = lerpf(arms[1].rotation.z, 0, delta * 12)
+	torso.rotation.x = lerpf(torso.rotation.x, lean, minf(delta * 15, 1))

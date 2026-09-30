@@ -64,10 +64,12 @@ func _run() -> void:
 	game.echo._process(1)
 	game.echo.summon("earth")
 	var scout: Node3D = game.combat._targets["scout"]
+	scout.immune_elements.assign(["earth"])
 	game.player.global_position = scout.global_position + Vector3(0, 0, 2)
 	responses.clear()
 	game.echo.request_ability("earth", "stun", "scout", scout.global_position, "combat")
-	check(responses.size() == 1 and not responses[0]["success"] and game.echo.can_use("earth"), "Wrong element is rejected without consuming cooldown")
+	check(responses.size() == 1 and not responses[0]["success"] and responses[0]["outcome"] == "resisted" and game.echo.can_use("earth"), "Explicit immunity is rejected without consuming cooldown")
+	scout.immune_elements.clear()
 	game.player.global_position = Vector3(40, 10, 40)
 	responses.clear()
 	game.echo.request_ability("earth", "stun", "shellguard", Vector3.ZERO, "combat")

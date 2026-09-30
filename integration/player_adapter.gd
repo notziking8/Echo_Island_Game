@@ -11,11 +11,14 @@ var dash_direction := Vector3.FORWARD
 var in_water: bool = false
 var water_surface: float = 0.0
 var external_velocity := Vector3.ZERO
+var combat_controller: Node
 var facing: Vector3:
 	get: return -visuals.global_basis.z if is_instance_valid(visuals) else Vector3.FORWARD
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(combat_controller) and combat_controller.vitals.dead and not event.is_action("debug_respawn"):
+		return
 	if wheel_open:
 		return
 	# Echo owns these bindings; disable debug abilities in the shared gameplay scene.
@@ -47,11 +50,22 @@ func _apply_horizontal_movement(delta: float) -> void:
 		velocity.x += external_velocity.x * delta
 		velocity.z += external_velocity.z * delta
 	velocity.y = maxf(velocity.y, external_velocity.y) if external_velocity.y > 0 else velocity.y
+	if is_instance_valid(combat_controller) and not wheel_open:
+		combat_controller.apply_motion(delta)
+
 
 
 func _process_grounded(delta: float) -> void:
-	if not wheel_open:
+	if not wheel_open and (not is_instance_valid(combat_controller) or combat_controller.phase == "idle"):
 		super._process_grounded(delta)
+
+func combat_alive() -> bool:
+	return not is_instance_valid(combat_controller) or not combat_controller.vitals.dead
+
+func receive_combat_damage(amount: float, source: Object = null) -> Dictionary:
+	if is_instance_valid(combat_controller):
+		return combat_controller.receive_damage(amount, source)
+	return {"success": false, "outcome": "no_combat_controller"}
 
 
 func _process_swimming(_delta: float) -> void:

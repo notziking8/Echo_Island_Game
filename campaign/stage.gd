@@ -14,6 +14,7 @@ var echo: Node
 var player: CharacterBody3D
 var controls: Node
 var combat: Node
+var player_combat: Node
 var wheel: Control
 var lilo: Node3D
 var kip: Node3D
@@ -26,7 +27,6 @@ var pending_events: Dictionary = {}
 var stone: Node3D
 var exit_at := Vector3(0, 0, -24)
 var message := ""
-var hit_cooldown := 0.0
 var initialized := false
 var data: Dictionary
 var clouds: Array[Node3D] = []
@@ -53,6 +53,10 @@ func _ready() -> void:
 	lilo = Lilo.new()
 	lilo.actor = player
 	player.visuals.add_child(lilo)
+	player_combat = preload("res://systems/combat/player_combat.gd").new()
+	player.combat_controller = player_combat
+	player.add_child(player_combat)
+	player_combat.weapon_selected.connect(func(index): lilo.set_weapon(["earth", "wind", "water", "time"][index]))
 	controls = preload("res://integration/input_adapter.gd").new()
 	add_child(controls)
 	controls.configure(echo, player.camera, player)
@@ -62,14 +66,29 @@ func _ready() -> void:
 	wheel = preload("res://systems/echo/echo_wheel.gd").new()
 	wheel.system = echo
 	canvas.add_child(wheel)
-	wheel.opened_changed.connect(func(open: bool): player.wheel_open = open)
+	wheel.opened_changed.connect(func(open: bool):
+		player.wheel_open = open
+		if open:
+			player_combat.cancel_attack()
+	)
 	controls.wheel = wheel
+	player_combat.death_started.connect(func(): controls.cancel(); wheel.close(false); controls.set_physics_process(false))
+	player.respawned.connect(func(_at): controls.set_physics_process(true))
 	kip = Spirit.new()
 	add_child(kip)
 	ancestor = Spirit.new()
 	add_child(ancestor)
 	effects = preload("res://presentation/effects.gd").new()
 	add_child(effects)
+	player_combat.hit_confirmed.connect(func(victim, result):
+		if result.success:
+			effects.burst(victim.global_position, "water" if result.shatter else "earth")
+		message = "Shatter! +50% damage" if result.shatter else ("Critical!" if result.critical else result.outcome.capitalize())
+	)
+	var combat_visuals := preload("res://systems/combat/combat_visuals.gd").new()
+	combat_visuals.controller = player_combat
+	combat_visuals.visual_root = lilo
+	player.add_child(combat_visuals)
 	echo.state_changed.connect(_refresh_echo)
 	echo.TraversalAbilityEvent.connect(_receive_traversal)
 	echo.ability_started.connect(_ability_started)
@@ -177,8 +196,20 @@ func _build_encounter() -> void:
 	enemy.position = Vector3(0, 0.1, -20 if stage_index == 8 else 9)
 	enemy.target = player
 	enemy.detection_range = 6
+	enemy.combo_guardian = stage_index == 8
 	add_child(enemy)
 	enemies.append(enemy)
+	# Group pressure begins only when the generation has switching available.
+	if stage_index >= 4 and stage_index < 8:
+		for i in 2:
+			var extra := Enemy.new()
+			extra.target_id = "stage_%d_flank_%d" % [stage_index, i]
+			extra.archetype = 0 if i == 0 else (3 if stage_index < 7 else 1)
+			extra.position = Vector3(-3 if i == 0 else 3, 0.1, 5 - i * 3)
+			extra.target = player
+			extra.detection_range = 7
+			add_child(extra)
+			enemies.append(extra)
 	if "crack" in data.tasks:
 		_add_earth("rock", "rock", Vector3(0, 0.02, 3))
 	if "raise_platform" in data.tasks:
@@ -235,8 +266,7 @@ func _refresh_echo() -> void:
 	ancestor.visible = not echo.active_echo.is_empty()
 	if ancestor.visible:
 		ancestor.set_element(echo.active_echo)
-	if not echo.selected_power().is_empty():
-		lilo.set_weapon(echo.selected_power())
+	# Echo selection does not silently change the player's quick-slot weapon skin.
 
 func _ability_started(event: Dictionary) -> void:
 	pending_events[event.request_id] = event.duplicate()
@@ -310,7 +340,7 @@ func proximity_prompt() -> String:
 	return controls.prompt()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not initialized or wheel.is_open or manager.transitioning:
+	if not initialized or wheel.is_open or manager.transitioning or player_combat.vitals.dead:
 		return
 	if event.is_action_pressed("interact"):
 		if is_instance_valid(stone) and stone.visible and player.global_position.distance_to(stone.global_position) < 2.3 and can_collect_stone():
@@ -321,15 +351,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				message = str(data.stone).capitalize() + " is now your personal power. Aim and use E."
 		elif player.global_position.distance_to(exit_at) < 3.5 and can_exit():
 			exit_requested.emit()
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and hit_cooldown <= 0:
-		# Same strike contract/range/damage/cooldown as the original integration scene.
-		var victim: Node3D = controls.target
-		if is_instance_valid(victim) and victim.has_method("take_damage") and player.global_position.distance_to(victim.global_position) <= 3:
-			var applied: bool = victim.take_damage(10.0, player.global_position)
-			hit_cooldown = 0.4
-			lilo.strike()
-			effects.burst(victim.global_position, "strike", false)
-			message = "Strike landed." if applied else "Armored shell: stagger with Earth or approach from behind."
 
 func _physics_process(_delta: float) -> void:
 	if not initialized:
@@ -353,7 +374,6 @@ func _process(delta: float) -> void:
 	if not initialized:
 		return
 	elapsed += delta
-	hit_cooldown = maxf(0, hit_cooldown - delta)
 	kip.global_position = kip.global_position.lerp(player.global_position + Vector3(0.9, 1.5, 0.4), minf(delta * 8, 1))
 	ancestor.global_position = ancestor.global_position.lerp(player.global_position + Vector3(-0.9, 1.65, 0.4), minf(delta * 7, 1))
 	for i in clouds.size():

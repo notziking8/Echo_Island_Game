@@ -1,7 +1,7 @@
 extends Node3D
 ## Composition root: Traversal's island/player + Echo + Combat, connected once.
 
-const Echo = preload("res://systems/echo/echo_system.gd")
+const Echo = preload("res://systems/combat/echo_combat_adapter.gd")
 const Wheel = preload("res://systems/echo/echo_wheel.gd")
 const Ghost = preload("res://systems/echo/echo_ghost.gd")
 const IntegratedPlayer = preload("res://integration/player_adapter.gd")
@@ -14,6 +14,7 @@ var world: Node3D
 var player: CharacterBody3D
 var echo: Node
 var combat: Node
+var player_combat: Node
 var controls: Node
 var wheel: Control
 var ghost: Node3D
@@ -41,6 +42,9 @@ func _ready() -> void:
 	add_child(world)
 	player.spring_arm.spring_length = 5.5
 	player.spring_arm.rotation.x = deg_to_rad(-18)
+	player_combat = preload("res://systems/combat/player_combat.gd").new()
+	player.combat_controller = player_combat
+	player.add_child(player_combat)
 	echo = Echo.new()
 	echo.name = "EchoSystem"
 	add_child(echo)
@@ -53,6 +57,8 @@ func _ready() -> void:
 	ghost = Ghost.new()
 	add_child(ghost)
 	_build_ui()
+	player_combat.death_started.connect(func(): controls.cancel(); wheel.close(false); controls.set_physics_process(false))
+	player.respawned.connect(func(_at): controls.set_physics_process(true))
 	echo.state_changed.connect(_refresh_ghost)
 	echo.hint_ready.connect(func(ancestor: String, text: String): message.text = ancestor.capitalize() + ": " + text)
 	echo.ability_finished.connect(func(response: Dictionary): message.text = ("Applied: " if response["success"] else "Not applied: ") + response["resulting_status"])
@@ -190,12 +196,7 @@ func _refresh_ghost() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not initialized or wheel.is_open or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and _hit_cooldown <= 0:
-		var victim: Node3D = controls.target
-		if is_instance_valid(victim) and victim.has_method("take_damage") and player.global_position.distance_to(victim.global_position) <= 3:
-			var applied: bool = victim.take_damage(10.0, player.global_position)
-			_hit_cooldown = 0.4
-			message.text = "Strike hit" if applied else "Guard blocked it: use Earth first"
+	# Timed hits now belong to PlayerCombat, never to immediate click damage.
 
 
 func _build_ui() -> void:

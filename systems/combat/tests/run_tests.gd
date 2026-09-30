@@ -4,7 +4,9 @@ const CombatEnemyScript = preload("res://systems/combat/combat_enemy.gd")
 const CombatSystemScript = preload("res://systems/combat/combat_system.gd")
 
 func _init() -> void:
-	assert(CombatSystemScript.new() != null)
+	var combat_system = CombatSystemScript.new()
+	assert(combat_system != null)
+	combat_system.free()
 	var shellguard = CombatEnemyScript.new()
 	shellguard.target_id = "shellguard"
 	shellguard.archetype = CombatEnemyScript.Archetype.SHELLGUARD

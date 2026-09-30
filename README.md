@@ -1,5 +1,14 @@
 # Echo_Island_Game
 
+## Combat upgrade branch
+
+The working branch includes timed LMB combos, RMB heavy attacks, Shift dodge,
+real player damage/vitals, elemental combinations, an Echo combat meter, enemy
+attack phases and a three-phase Sentinel. See
+[the combat upgrade guide](systems/combat/UPGRADE.md) for controls, tuning,
+architecture, validation and remaining production-animation requirements.
+This supersedes the older combat limitations in the first-pass campaign report.
+
 ## Story campaign (main)
 
 [Play Echo Island in your browser](https://notziking8.github.io/Echo_Island_Game/).

@@ -31,9 +31,16 @@ func _draw() -> void:
 	var h := size.y
 	panel(Rect2(20, 20, 290, 102))
 	text(Vector2(38, 48), "LILO  /  GENERATION %d" % manager.echo.generation, 18)
-	text(Vector2(38, 73), "Health  —  not connected", 15, Color("697b79"))
+	var vitals: Node = stage.player_combat.vitals
+	for i in 10:
+		var filled: float = clampf((vitals.health - i * 10) / 10.0, 0, 1)
+		draw_rect(Rect2(38 + i * 19, 60, 16, 10), Color("c5bba9"))
+		draw_rect(Rect2(38 + i * 19, 60, 16 * filled, 10), Art.CORAL)
+	if vitals.shield > 0:
+		draw_rect(Rect2(38, 74, 180 * vitals.shield / vitals.max_health, 4), Art.SKY)
 	text(Vector2(38, 101), "Relics  %d / 5" % manager.relic_stages.size(), 18)
 	var selected: String = manager.echo.selected_power()
+	text(Vector2(241, 108), "%d" % roundi(manager.echo.energy), 12)
 	for i in 4:
 		var angle := -PI / 2 + i * TAU / 4
 		var element: String = manager.echo.ELEMENTS[i]
@@ -53,8 +60,8 @@ func _draw() -> void:
 		text(Vector2(w - 290, 89), "%d%%  ·  %s" % [roundi(ratio * 100), CombatEnemy.State.keys()[target.state].capitalize()], 14)
 		text(Vector2(w - 290, 112), "Weakness: " + target.weakness().capitalize(), 14)
 	panel(Rect2(20, h - 112, 320, 92))
-	text(Vector2(36, h - 84), "WASD / arrows  Move    Space  Jump", 14)
-	text(Vector2(36, h - 60), "LMB  Strike    F  Interact    R  Respawn", 14)
+	text(Vector2(36, h - 84), "LMB  Combo    RMB  Heavy    Shift  Dodge", 13)
+	text(Vector2(36, h - 60), "Space  Jump    F  Interact    R  Respawn", 14)
 	text(Vector2(36, h - 36), "Tab  Wheel    Q / E  Power    X  Dismiss", 14)
 	for i in 4:
 		var element: String = manager.echo.ELEMENTS[i]
@@ -68,10 +75,27 @@ func _draw() -> void:
 		text(Vector2(x + 31, h - 62), ["E", "W", "W", "T"][i] if unlocked else "-", 18)
 		text(Vector2(x + 12, h - 32), element.capitalize(), 13)
 	panel(Rect2(w - 280, h - 112, 260, 92))
-	var weapon_name: String = {"earth": "Terran Gauntlets", "wind": "Tempest Bow", "water": "Tidal Trident", "time": "Hourglass Scythe"}.get(selected, "Terran Gauntlets")
+	var weapon_name: String = ["Terran Gauntlets", "Tempest Bow", "Tidal Trident", "Hourglass Scythe"][stage.player_combat.weapon_index]
 	text(Vector2(w - 262, h - 84), weapon_name, 18)
-	text(Vector2(w - 262, h - 60), "Close strike · cosmetic weapon", 14)
-	text(Vector2(w - 262, h - 36), "Ammo / level: not connected", 13, Color("697b79"))
+	text(Vector2(w - 262, h - 60), "Melee  ·  " + stage.player_combat.phase.capitalize(), 14)
+	text(Vector2(w - 262, h - 36), "1–4  Cosmetic slots · Same melee stats", 12, Color("697b79"))
+	for enemy in stage.enemies:
+		if not is_instance_valid(enemy) or enemy.health <= 0 or enemy.global_position.distance_to(stage.player.global_position) > 12:
+			continue
+		var camera: Camera3D = stage.player.camera
+		var at: Vector3 = enemy.global_position + Vector3.UP * (4.6 if enemy.archetype == 4 else 1.7)
+		if camera.is_position_behind(at) or not preload("res://systems/combat/attack_data.gd").clear_line(stage.player, enemy):
+			continue
+		var screen := camera.unproject_position(at)
+		screen.y = clampf(screen.y, 140, h - 240)
+		var awareness_color: Color = Color.WHITE if enemy.awareness == 0 else (Art.GOLD if enemy.awareness == 1 else Art.CORAL)
+		draw_circle(screen + Vector2(-48, -2), 4, awareness_color)
+		draw_rect(Rect2(screen + Vector2(-40, -6), Vector2(80, 7)), Color("304746"))
+		draw_rect(Rect2(screen + Vector2(-40, -6), Vector2(80 * enemy.health / enemy.max_health, 7)), Art.CORAL)
+		if enemy.max_shield > 0 and enemy.shield > 0:
+			draw_rect(Rect2(screen + Vector2(-40, -12), Vector2(80 * enemy.shield / enemy.max_shield, 3)), Art.GRASS)
+		if enemy.archetype == 4:
+			text(screen + Vector2(-48, -23), "Phase %d · %s" % [enemy.boss_phase, enemy.weakness().capitalize()], 13)
 	# Compact wrapped objective block; no floating world-space debug captions.
 	var lines := _wrap(stage.data.text, 57)
 	var missing: Array[String] = stage.missing_tasks()

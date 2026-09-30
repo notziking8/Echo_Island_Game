@@ -34,18 +34,9 @@ jobs:
         run: |
           GODOT="$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
           "$GODOT" --headless --editor --import --quit --path .
-          for suite in campaign/tests/run_tests.gd systems/combat/tests/run_tests.gd systems/echo/tests/run_tests.gd systems/echo/tests/run_powers_tests.gd integration/tests/run_tests.gd; do
+          for suite in campaign/tests/run_tests.gd systems/combat/tests/run_tests.gd systems/combat/tests/run_combat_tests.gd systems/echo/tests/run_tests.gd systems/echo/tests/run_powers_tests.gd integration/tests/run_tests.gd; do
             timeout 60 "$GODOT" --headless --path . --script "res://$suite" 2>&1 | tee "$RUNNER_TEMP/test.log"
-            # The unchanged Combat suite exits with one retained test resource on
-            # Linux after reporting success. Allow only that exact shutdown line,
-            # only for that suite; all script/assertion/other engine errors fail.
-            if [ "$suite" = systems/combat/tests/run_tests.gd ]; then
-              grep -F 'Combat tests passed' "$RUNNER_TEMP/test.log"
-              sed '/^ERROR: 1 resources still in use at exit (run with --verbose for details).$/d' "$RUNNER_TEMP/test.log" > "$RUNNER_TEMP/checked.log"
-            else
-              cp "$RUNNER_TEMP/test.log" "$RUNNER_TEMP/checked.log"
-            fi
-            if grep -E 'SCRIPT ERROR|FAIL:|ERROR:' "$RUNNER_TEMP/checked.log"; then exit 1; fi
+            if grep -E 'SCRIPT ERROR|FAIL:|ERROR:' "$RUNNER_TEMP/test.log"; then exit 1; fi
           done
       - name: Export the playable web build
         run: |

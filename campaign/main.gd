@@ -20,7 +20,7 @@ var hud: Control
 var timer := 0.0
 
 func _ready() -> void:
-	echo = preload("res://systems/echo/echo_system.gd").new()
+	echo = preload("res://systems/combat/echo_combat_adapter.gd").new()
 	echo.enforce_story_order = true
 	add_child(echo)
 	canvas = CanvasLayer.new()

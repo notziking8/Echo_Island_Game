@@ -6,6 +6,8 @@ var feet: Array[Node3D] = []
 var timer := 0.0
 var previous_health := 0.0
 var flash := 0.0
+var dissolves: Array[ShaderMaterial] = []
+var base_colors: Array[Color] = []
 
 func _ready() -> void:
 	super._ready()
@@ -33,6 +35,14 @@ func _ready() -> void:
 			Art.orb(shell, Vector3(side * 0.72, 0.48, -0.65), Vector3(0.4, 0.32, 0.46), Art.CORAL)
 		for i in 3:
 			Art.orb(shell, Vector3((i - 1) * 0.25, 1.12, 0.05), Vector3(0.16, 0.08, 0.16), Art.GOLD)
+	for visual: Node in shell.find_children("*", "MeshInstance3D", true, false):
+		var dissolve := ShaderMaterial.new()
+		dissolve.shader = preload("res://systems/combat/dissolve.gdshader")
+		dissolve.set_shader_parameter("base_color", visual.material_override.albedo_color)
+		base_colors.append(visual.material_override.albedo_color)
+		dissolve.set_shader_parameter("reveal", 0.0)
+		visual.material_override = dissolve
+		dissolves.append(dissolve)
 
 func _build_guardian() -> void:
 	Art.orb(shell, Vector3(0, 1.9, 0), Vector3(2.15, 2.5, 1.35), Color("85927e"))
@@ -62,19 +72,19 @@ func _process(delta: float) -> void:
 	previous_health = health
 	flash = maxf(0, flash - delta)
 	var frozen := state == State.FROZEN or state == State.STUNNED
-	var pace := 0.35 if state == State.SLOWED else 1.0
+	var pace := 0.3 if _status_remaining.has("slow") else 1.0
 	for i in feet.size():
 		feet[i].rotation.z = 0 if frozen else sin(timer * 14 * pace + i * PI) * minf(velocity.length() * 0.06, 0.25)
 	shell.position.y = 0 if frozen else sin(timer * 5 * pace) * 0.025
-	shell.rotation.x = -0.12 * sin(timer * 6) if state == State.ATTACK else 0.0
+	shell.rotation.x = -0.25 * smoothstep(0, _startup(), attack_age) if attack_phase == "startup" else 0.0
 	shell.scale = Vector3.ONE * (1.04 if flash > 0 else 1.0)
 	if state == State.DEAD:
-		shell.rotation.z = lerpf(shell.rotation.z, PI * 0.65, delta * 4)
-		shell.scale = shell.scale.lerp(Vector3.ONE * 0.25, delta * 3)
-		shell.position.y = -0.2
-	elif velocity.length_squared() > 0.2:
-		shell.rotation.y = lerp_angle(shell.rotation.y, atan2(-velocity.x, -velocity.z), delta * 8)
+		shell.visible = defeat_age < 1.2
+		shell.rotation.z = 0
+	shell.rotation.y = 0
+	var reveal := clampf(1.0 - defeat_age / 1.2, 0, 1) if state == State.DEAD else clampf(life_age / maxf(spawn_seconds, 0.01), 0, 1)
+	for dissolve in dissolves:
+		dissolve.set_shader_parameter("reveal", reveal)
 	# Status shell uses the parent's truthful status tint.
-	for child in shell.get_children():
-		if child is MeshInstance3D:
-			child.material_overlay = mesh.material_override if frozen or state == State.SLOWED or flash > 0 else null
+	for i in dissolves.size():
+		dissolves[i].set_shader_parameter("base_color", mesh.material_override.albedo_color if frozen or _status_remaining.has("slow") or flash > 0 else base_colors[i])

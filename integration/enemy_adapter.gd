@@ -44,10 +44,11 @@ func _process(_delta: float) -> void:
 
 
 func weakness() -> String:
-	for element in ["earth", "wind", "water", "time"]:
-		if not echo_action(element).is_empty():
-			return element
-	return ""
+	if guard_blocks_front and not guard_broken:
+		return "earth"
+	if combo_guardian and exposed_remaining <= 0:
+		return ["earth", "wind", "water", "time"][mini(combo_step, 3)]
+	return "all elements"
 
 
 func set_highlight(value: bool) -> void:
@@ -56,4 +57,4 @@ func set_highlight(value: bool) -> void:
 
 
 func prompt() -> String:
-	return "%s required • Left click within 3m to attack" % weakness().capitalize()
+	return "%s • LMB combo / RMB heavy / Shift dodge" % weakness().capitalize()
