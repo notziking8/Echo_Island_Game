@@ -3,7 +3,7 @@ extends Control
 
 signal opened_changed(open: bool)
 const ELEMENTS := ["earth", "wind", "water", "time"]
-const COLORS := [Color("ffd166"), Color("74c7ec"), Color("59bca2"), Color("ac88cb")]
+const COLORS := [Color("7ed957"), Color("74c7ec"), Color("59bca2"), Color("ffd166")]
 const DETAILS := ["Shape • move • break", "Dash • glide • lift", "Freeze • flow • dive", "Slow • freeze • reset"]
 var system: Node
 var selection: int = -1
@@ -100,7 +100,11 @@ func _draw() -> void:
 	_text("ECHOES", center + Vector2(0, 5), 18, Color("ffd166"))
 	_text("Hold Tab • aim or use arrows • release to select", center + Vector2(0, -radius - 35), 20, Color.WHITE)
 	_text(DETAILS[selection] if selection >= 0 else "Move outward to choose", center + Vector2(0, radius + 40), 20, Color.WHITE)
-	_text("Time stays yours. Your ancestor can remain beside you.  •  Esc cancels", center + Vector2(0, radius + 70), 14, Color("b7d4cf"))
+	var personal: String = system.personal_power()
+	var footer := "Discover this generation's stone. Your ancestors carry the earlier powers."
+	if not personal.is_empty():
+		footer = personal.capitalize() + " is yours: E. Select an inherited Echo for Q."
+	_text(footer + "  |  Esc cancels", center + Vector2(0, radius + 70), 14, Color("b7d4cf"))
 
 
 func _text(text: String, at: Vector2, font_size: int, color: Color) -> void:

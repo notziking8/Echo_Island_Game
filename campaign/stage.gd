@@ -31,6 +31,10 @@ var initialized := false
 var data: Dictionary
 var clouds: Array[Node3D] = []
 var elapsed := 0.0
+var guide: Node3D
+var message_age := 0.0
+var last_message := ""
+var wind_crossing_armed := false
 
 func _ready() -> void:
 	data = Catalog.STAGES[stage_index]
@@ -42,7 +46,7 @@ func _ready() -> void:
 	_build_landscape()
 	player = preload("res://scenes/player/player.tscn").instantiate()
 	player.set_script(preload("res://integration/player_adapter.gd"))
-	player.position = Vector3(0, 0.15, 16)
+	player.position = Vector3(0, 0.15, 14 if stage_index == 5 else 16)
 	add_child(player)
 	player.spring_arm.spring_length = 6.3
 	player.spring_arm.rotation.x = deg_to_rad(-22)
@@ -56,6 +60,7 @@ func _ready() -> void:
 	controls = preload("res://integration/input_adapter.gd").new()
 	add_child(controls)
 	controls.configure(echo, player.camera, player)
+	controls.feedback.connect(func(value: String): message = value)
 	var canvas := CanvasLayer.new()
 	canvas.layer = 8
 	add_child(canvas)
@@ -71,10 +76,12 @@ func _ready() -> void:
 	effects = preload("res://presentation/effects.gd").new()
 	add_child(effects)
 	echo.state_changed.connect(_refresh_echo)
+	echo.hint_ready.connect(func(element: String, value: String): message = element.capitalize() + ": " + value)
 	echo.TraversalAbilityEvent.connect(_receive_traversal)
 	echo.ability_started.connect(_ability_started)
 	echo.ability_finished.connect(_ability_finished)
 	player.respawned.connect(func(_at: Vector3): controls.cancel(); wheel.close(false); message = "Returned to this scene's arrival point. Your discoveries remain.")
+	player.respawned.connect(func(_at: Vector3): wind_crossing_armed = false)
 	_build_encounter()
 	combat = preload("res://integration/combat_bridge.gd").new()
 	combat.echo_system = echo
@@ -82,12 +89,18 @@ func _ready() -> void:
 	combat.reach = controls.reach
 	add_child(combat)
 	_refresh_echo()
-	message = ""
+	var composition := preload("res://presentation/camera_composition.gd").new()
+	add_child(composition)
+	composition.configure(self, player, player.camera)
+	guide = Node3D.new()
+	add_child(guide)
+	Art.ring(guide, Vector3.ZERO, 0.55, Art.GOLD, 0.035)
+	message = arrival_hint()
 	initialized = true
 
 func _build_landscape() -> void:
 	Art.lighting(self, stage_index == 8)
-	var ocean := Art.orb(self, Vector3(0, -4, -4), Vector3(240, 0.4, 240), Color("4fbdcb"))
+	var ocean := Art.water(self, Vector3(0, -4, -4), Vector2(240, 240))
 	ocean.name = "Ocean"
 	var split := stage_index >= 3
 	var water_ruins := stage_index == 5
@@ -103,22 +116,28 @@ func _build_landscape() -> void:
 	# Continuous warm path on each shore; gaps remain readable rather than disguised.
 	for i in 22:
 		var z := 17.0 - i * 1.85
+		if i % 3 == 1:
+			continue
 		if split and z < -10.5 and z > -16:
 			continue
 		if water_ruins and z < -5.5:
 			continue
-		Art.orb(self, Vector3(sin(i * 0.5) * 0.7, 0.015, z), Vector3(2.7, 0.09, 1.7), Art.GOLD.darkened(0.06 + (i % 3) * 0.025))
+		if water_ruins and z > 15:
+			continue
+		Art.stone(self, Vector3(sin(i * 0.5) * 0.7, 0.015, z), Vector3(1.9 + sin(i) * 0.2, 0.06, 1.25), Color("d9c795").darkened((i % 3) * 0.025), i)
 	for i in 14:
 		var side := -1 if i % 2 else 1
 		var z := 15.0 - (i / 2) * 4.3
+		if water_ruins:
+			z = minf(z, 12.0)
 		var x := side * (7.5 + sin(i) * 1.5)
 		if water_ruins and z < -3:
 			continue
 		if stage_index == 3:
-			Art.orb(self, Vector3(x, 1.8, z), Vector3(3, 4, 3), Color("c8b898"))
+			Art.stone(self, Vector3(x, 1.8, z), Vector3(3, 4, 3), Color("dbc397"), i)
 		else:
 			Art.tree(self, Vector3(x, 0, z), 0.85 + (i % 3) * 0.15, i + stage_index)
-		Art.orb(self, Vector3(x * 0.7, 0.3, z - 1), Vector3(1.3, 0.7, 1.1), Color("adb491"))
+		Art.stone(self, Vector3(x * 0.7, 0.3, z - 1), Vector3(1.3, 0.7, 1.1), Color("cbbd92"), i)
 	if not water_ruins:
 		Art.scatter(self, 82 + stage_index, 140, split)
 	Art.arch(self, exit_at, 2.5)
@@ -131,7 +150,7 @@ func _build_landscape() -> void:
 		cloud.position = Vector3(-35 + i * 12, 13 + i % 3, -35 - i % 2 * 12)
 		add_child(cloud)
 		for j in 4:
-			Art.orb(cloud, Vector3(j * 1.7, sin(j) * 0.4, 0), Vector3(4, 1.5, 2), Color("eff8ea"))
+			Art.orb(cloud, Vector3(j * 1.7, sin(j) * 0.5, 0), Vector3(4, 2.0 + sin(j) * 0.65, 2.8), Color("eff8ea"))
 		clouds.append(cloud)
 	if stage_index == 0:
 		# Arrival's shoreline and a small rounded boat landmark.
@@ -140,11 +159,12 @@ func _build_landscape() -> void:
 	if stage_index in [1, 5, 7, 8]:
 		Art.arch(self, Vector3(0, 0, -6), 3.8)
 		for side in [-1, 1]:
-			Art.rod(self, Vector3(side * 4, 0, -7), Vector3(side * 4, 4, -7), 0.65, Art.GOLD.darkened(0.18))
+			Art.column(self, Vector3(side * 4, 0, -7), 3.5, side + stage_index)
 	if stage_index == 8:
 		for i in 4:
 			Art.ring(self, Vector3(0, 0.06 + i * 0.025, -21), 3 + i * 0.35, Art.MAGIC, 0.025)
 	_build_biome_details()
+	preload("res://presentation/regions.gd").dress(self, stage_index)
 
 func _build_biome_details() -> void:
 	# Region-specific silhouettes sit off the collision-safe main route.
@@ -154,18 +174,19 @@ func _build_biome_details() -> void:
 				var vine_arch := Art.arch(self, Vector3(0, 0, 11 - i * 6), 4.8)
 				vine_arch.rotation.y = 0.12 * sin(i)
 				for j in 7:
-					Art.orb(vine_arch, Vector3(-2.2 + j * 0.7, 4 + sin(j) * 0.4, 0), Vector3(0.13, 1.8, 0.16), Art.GRASS.darkened(0.3))
+					Art.Sculpt.vine(vine_arch, Vector3(-2.2 + j * 0.7, 1.5 + sqrt(4.8 * 4.8 - pow(-2.2 + j * 0.7, 2)), 0.55), 1.4 + sin(j) * 0.35, j)
 		3:
 			for i in 4:
 				Art.land(self, Vector3(-16 + i * 11, -0.5 + i * 0.6, -35 - i % 2 * 7), Vector3(6, 1, 7), Art.GOLD.darkened(0.13))
 		4, 5:
 			for side in [-1, 1]:
-				Art.orb(self, Vector3(side * 12, -0.8, -9), Vector3(2.8, 0.18, 21), Art.SKY.darkened(0.1))
-				Art.orb(self, Vector3(side * 12, -2.0, 1), Vector3(2.8, 3.5, 0.12), Art.SKY)
+				Art.water(self, Vector3(side * 12, -0.8, -9), Vector2(2.8, 21))
+				var waterfall := Art.water(self, Vector3(side * 12, -2.0, 1), Vector2(2.8, 3.5))
+				waterfall.rotation.x = PI * 0.5
 		7:
 			for i in 6:
 				var a := i * TAU / 6
-				Art.rod(self, Vector3(cos(a) * 5, 0, -21 + sin(a) * 4), Vector3(cos(a) * 5, 5, -21 + sin(a) * 4), 0.48, Art.GOLD.darkened(0.18))
+				Art.column(self, Vector3(cos(a) * 5, 0, -21 + sin(a) * 4), 4.5, i)
 			for i in 3:
 				var halo := Art.ring(self, Vector3(0, 4 + i * 0.3, -22), 2 + i * 0.4, Art.GOLD)
 				halo.rotation.x = 0.2 * i
@@ -247,11 +268,17 @@ func _ability_finished(response: Dictionary) -> void:
 	var event: Dictionary = pending_events.get(response.request_id, {})
 	pending_events.erase(response.request_id)
 	if response.success and not event.is_empty():
+		manager.soundscape.play(event.echo_id)
 		var objective_applied: bool = event.intended_effect != "crack" or (targets.has(event.target_id) and targets[event.target_id].damage >= 2)
+		if event.intended_effect in ["air_dash", "glide"] and "air_dash" in data.tasks:
+			# Learning Wind means crossing the channel, not casting anywhere on land.
+			objective_applied = false
+			if player.position.z <= -4 and player.position.z >= -16 and absf(player.position.x) < 8:
+				wind_crossing_armed = true
 		if objective_applied and event.intended_effect not in completed:
 			completed.append(event.intended_effect)
 		effects.burst(event.position, event.echo_id)
-		message = "The island responds: " + str(event.intended_effect).replace("_", " ") + "."
+		message = {"crack": "The stone gives way." if objective_applied else "A fracture opens. Tap again to clear the boulder.", "raise_platform": "An old path rises from the earth.", "air_dash": "Let the wind carry you across.", "wind_current": "The updraft is awake. Step into it to rise.", "freeze_water": "The water holds. Cross while the ice lasts.", "freeze_object": "The relic falls still. Time has made a path.", "stun": "The shell is open. Move in and strike."}.get(event.intended_effect, "Your Echo answers.")
 	else:
 		message = "No effect here. Check your power, aim, distance, and whether the destination is clear."
 
@@ -287,6 +314,31 @@ func missing_tasks() -> Array[String]:
 func can_exit() -> bool:
 	return enemies_defeated() and missing_tasks().is_empty() and (data.stone.is_empty() or data.stone in echo.collected_stones)
 
+func arrival_hint() -> String:
+	if stage_index in [2, 4, 6]:
+		return "A new keeper arrives. Hold Tab to call an ancestor; use Q for their gift. E awaits your own stone."
+	return ["Kip: The island remembers footsteps. Let's leave some of our own.", "Kip: Something beneath these roots remembers you.", "", "Kip: Look up. Some paths are waiting to be raised.", "", "Kip: The next memory rests beyond the water.", "", "Kip: Every gift you inherited brought you here.", "Kip: Four gifts. One island. Bring its memories home."][stage_index]
+
+func next_objective() -> Dictionary:
+	if can_exit():
+		return {"title": "Follow the ancestral arch", "hint": "Approach the golden arch and press F.", "at": exit_at, "element": ""}
+	if can_collect_stone():
+		return {"title": "Remember " + str(data.stone).capitalize(), "hint": "Approach the stone and press F. Its gift becomes your personal power on E.", "at": stone.global_position, "element": data.stone}
+	if stage_index in [0, 1] and not enemies_defeated():
+		return {"title": "Clear the way", "hint": "Aim at the moss crab. Move close and left click to strike.", "at": enemies[0].global_position, "element": ""}
+	var tasks := missing_tasks()
+	if not tasks.is_empty():
+		var task: String = tasks[0]
+		var spec: Array = {"crack": ["earth", "rock", "Open the old path", "Tap to fracture the boulder twice."], "raise_platform": ["earth", "platform", "Raise a way forward", "Aim at the earth seal and tap. Climb the raised ledge."], "air_dash": ["wind", "", "Cross with the wind", "At the channel, jump and tap to dash; hold to glide."], "wind_current": ["wind", "vent", "Wake the sleeping wind", "Aim at the vent and tap. Step into the updraft."], "freeze_water": ["water", "pool", "Make a path across water", "Aim at the pool from the bank and tap to freeze it."], "freeze_object": ["time", "clockwork", "Still the restless relic", "Aim at the moving relic and tap to stop it."], "stun": ["earth", "", "Break the guardian's defense", "Aim at its shell and tap, then move close to strike."]}[task]
+		var key := "E" if spec[0] == echo.personal_power() else "Q"
+		var at := Vector3(0, 0, -9)
+		if targets.has(spec[1]):
+			at = targets[spec[1]].global_position
+		elif task == "stun":
+			at = enemies[0].global_position
+		return {"title": spec[2], "hint": "%s / %s. %s" % [str(spec[0]).capitalize(), key, spec[3]], "at": at, "element": spec[0]}
+	return {"title": "Face the island's guardian", "hint": "Aim and strike within reach. Use its Echo weakness to open a safe approach.", "at": enemies[0].global_position, "element": ""}
+
 func can_collect_stone() -> bool:
 	if not is_instance_valid(stone) or data.stone in echo.collected_stones:
 		return false
@@ -306,15 +358,23 @@ func proximity_prompt() -> String:
 	if player.global_position.distance_to(exit_at) < 3.5:
 		return "F  ·  Continue the story" if can_exit() else "The arch awaits: defeat the guard and complete this scene's objectives."
 	if stage_index == 0:
-		return "Aim at the shore crab. Left click within 3m to strike. Earth is discovered in the next scene."
+		return "Left click to strike within reach." if is_instance_valid(controls.target) else "Follow the worn path. Aim with the center reticle."
 	return controls.prompt()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not initialized or wheel.is_open or manager.transitioning:
 		return
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode in [KEY_1, KEY_2, KEY_3, KEY_4]:
+		controls.cancel()
+		var element: String = echo.ELEMENTS[event.physical_keycode - KEY_1]
+		if not echo.select_power(element):
+			message = element.capitalize() + " has not been discovered by this keeper yet."
+		get_viewport().set_input_as_handled()
 	if event.is_action_pressed("interact"):
 		if is_instance_valid(stone) and stone.visible and player.global_position.distance_to(stone.global_position) < 2.3 and can_collect_stone():
 			if echo.collect_stone(data.stone):
+				echo.select_power(data.stone)
+				manager.soundscape.play(data.stone, true)
 				stone.hide()
 				lilo.interact_pose()
 				effects.burst(stone.global_position, data.stone)
@@ -328,12 +388,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			var applied: bool = victim.take_damage(10.0, player.global_position)
 			hit_cooldown = 0.4
 			lilo.strike()
+			if applied:
+				manager.soundscape.play("strike")
 			effects.burst(victim.global_position, "strike", false)
 			message = "Strike landed." if applied else "Armored shell: stagger with Earth or approach from behind."
 
 func _physics_process(_delta: float) -> void:
 	if not initialized:
 		return
+	if wind_crossing_armed and player.position.z < (-8.3 if stage_index == 5 else -16.5) and player.position.y > -0.4 and absf(player.position.x) < 6:
+		wind_crossing_armed = false
+		if "air_dash" not in completed:
+			completed.append("air_dash")
+			message = "Across together. The wind remembers your passage."
 	player.external_velocity = Vector3.ZERO
 	player.in_water = false
 	for object in targets.values():
@@ -353,6 +420,17 @@ func _process(delta: float) -> void:
 	if not initialized:
 		return
 	elapsed += delta
+	if message != last_message:
+		last_message = message
+		message_age = 0.0
+	message_age += delta
+	if message_age > 8.0:
+		message = ""
+	var objective := next_objective()
+	if message.is_empty() and not echo.active_echo.is_empty() and objective.element == echo.active_echo and player.global_position.distance_to(objective.at) < 12:
+		echo.receive_echo_interaction({"echo_id": echo.active_echo, "object_or_area_id": "chapter_%d_%s" % [stage_index, objective.title], "hint": objective.hint})
+	guide.global_position = objective.at + Vector3.UP * (0.12 + sin(elapsed * 2) * 0.04)
+	guide.rotation.y += delta * 0.3
 	hit_cooldown = maxf(0, hit_cooldown - delta)
 	kip.global_position = kip.global_position.lerp(player.global_position + Vector3(0.9, 1.5, 0.4), minf(delta * 8, 1))
 	ancestor.global_position = ancestor.global_position.lerp(player.global_position + Vector3(-0.9, 1.65, 0.4), minf(delta * 7, 1))

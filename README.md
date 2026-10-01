@@ -1,10 +1,22 @@
 # Echo_Island_Game
 
+## Current local overhaul
+
+The nine-chapter campaign now includes regional art treatments, a quieter HUD,
+next-action guidance, contextual ancestral hints, 1–4 power selection, corrected
+generation handoffs, and chapter-entry saves. Wind crossings accept dash or glide
+and require reaching the other shore. See [the current direction and scope](campaign/DIRECTION.md).
+
+Open `project.godot` and press F5, or double-click `Play Echo Island.cmd` in this
+Windows workspace. A saved journey resumes at the current chapter's entrance;
+Enter/click continues and N starts over. Work in the current chapter resets on
+resume. This local update has not been deployed to the browser link below.
+
 ## Story campaign (main)
 
 [Play Echo Island in your browser](https://notziking8.github.io/Echo_Island_Game/).
 On `main`, open `project.godot` in Godot 4.7.2 and press **F5** for the new title
-screen and nine-scene campaign. Press any key/click to start. Powers are discovered
+screen and nine-scene campaign. Start a new journey or continue a saved chapter. Powers are discovered
 in story order; they are not all unlocked at the beginning.
 
 WASD/arrows move, mouse looks, Space jumps, left click strikes a targeted enemy
@@ -14,7 +26,7 @@ through completed exit arches. X dismisses, R respawns, Esc releases the mouse.
 Five optional relics are spread across Arrival, Overgrown Path, Flooded Trail,
 Forbidden Interior, and Island Core.
 
-This is a **procedural-art playable first pass**, not the finished reference art.
+This is a **playable procedural-art campaign**, not finished production character art.
 The inherited Combat/Echo/Traversal logic is preserved. Player health/damage,
 dodge, ranged firing, and multi-element boss phases still need their owners'
 implementations. Cosmetic bows/tridents do not change the existing melee attack.
@@ -37,7 +49,8 @@ Combat project. This is a development playtest, not a finished release.
    ```
 
 2. Open/import the extracted `project.godot` in **Godot 4.7.2**.
-3. Press **F5**. The main scene is `integration/team_game.tscn`.
+3. Open `integration/team_game.tscn` and press **F6** for the original playground.
+   **F5** now starts the nine-chapter campaign.
 
 All powers start unlocked. Arrow keys or WASD move, mouse looks, and Space jumps.
 Hold **Tab**, choose with the mouse or arrows, and release to select a power.

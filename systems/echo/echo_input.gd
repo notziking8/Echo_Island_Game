@@ -1,4 +1,5 @@
 extends Node
+signal feedback(text: String)
 ## Optional keyboard/mouse adapter. Namespaced actions preserve team input mappings.
 
 const EarthTarget = preload("res://systems/echo/earth_target.gd")
@@ -62,6 +63,13 @@ func _physics_process(delta: float) -> void:
 					_element = element
 					_locked_target = candidate
 					_elapsed = 0.0
+				else:
+					if element.is_empty():
+						feedback.emit("Your personal gift awaits its stone. Hold Tab to call an inherited Echo.")
+					elif not system.can_use(element):
+						feedback.emit(element.capitalize() + " is recovering. Let its ring refill.")
+					else:
+						feedback.emit("Aim " + element.capitalize() + " at a matching target within reach.")
 				break
 	else:
 		_elapsed += delta

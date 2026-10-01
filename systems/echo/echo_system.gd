@@ -99,6 +99,7 @@ func begin_generation(next_generation: int) -> bool:
 		return false
 	generation = next_generation
 	active_echo = ""
+	focus_personal = false
 	cooldowns.clear()
 	state_changed.emit()
 	return true
