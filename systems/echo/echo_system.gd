@@ -87,6 +87,8 @@ func unlock_all() -> void:
 
 func select_power(element: String) -> bool:
 	if element == personal_power() and not element.is_empty():
+		if not active_echo.is_empty():
+			return false
 		focus_personal = true
 		state_changed.emit()
 		return true
@@ -99,7 +101,6 @@ func begin_generation(next_generation: int) -> bool:
 		return false
 	generation = next_generation
 	active_echo = ""
-	focus_personal = false
 	cooldowns.clear()
 	state_changed.emit()
 	return true
@@ -128,7 +129,7 @@ func dismiss() -> void:
 
 
 func selected_power(personal: bool = false) -> String:
-	return personal_power() if personal or focus_personal or active_echo.is_empty() else active_echo
+	return personal_power() if personal else active_echo
 
 
 func can_use(element: String) -> bool:

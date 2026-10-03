@@ -10,7 +10,6 @@ func capture() -> void:
 		if arg.begins_with("--output="):
 			output = arg.trim_prefix("--output=")
 	var game := preload("res://campaign/main.tscn").instantiate()
-	game.persistence_enabled = false
 	root.add_child(game)
 	await frames(15)
 	await save(output.path_join("echo-title.png"))
@@ -34,7 +33,6 @@ func capture() -> void:
 	await frames(15)
 	await save(output.path_join("echo-core.png"))
 	game.free()
-	await create_timer(0.15).timeout
 	quit()
 
 func frames(count: int) -> void:

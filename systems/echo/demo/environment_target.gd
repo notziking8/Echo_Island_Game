@@ -2,6 +2,7 @@ extends StaticBody3D
 ## Working reference receiver for persistent Wind/Water changes and Time objects.
 
 @export_enum("vent", "pool", "stream", "clockwork") var kind: String = "vent"
+@export var custom_size: Vector3 = Vector3.ZERO
 var target_id: String = ""
 var channel: String = "traversal"
 var active: bool = false
@@ -48,6 +49,8 @@ func _ready() -> void:
 
 
 func dimensions() -> Vector3:
+	if custom_size != Vector3.ZERO:
+		return custom_size
 	match kind:
 		"pool": return Vector3(6, 0.12, 6)
 		"stream": return Vector3(2, 0.12, 5)
@@ -90,7 +93,10 @@ func apply_event(event: Dictionary, actor: CharacterBody3D = null) -> bool:
 				return false
 			actor.in_water = true
 			return actor.apply_event(event)
-		"freeze_object": frozen_remaining = clampf(float(event.get("duration_seconds", 6.0)), 0.1, 30)
+		"freeze_object":
+			frozen_remaining = clampf(float(event.get("duration_seconds", 6.0)), 0.1, 30)
+			if kind == "clockwork":
+				active = true
 		"reset_object":
 			if not _clear_at(home):
 				return false
@@ -113,6 +119,8 @@ func _physics_process(delta: float) -> void:
 	if frozen_remaining > 0:
 		frozen_remaining = maxf(0, frozen_remaining - delta)
 		if frozen_remaining == 0:
+			if kind == "clockwork":
+				active = false
 			_refresh()
 	elif kind == "clockwork":
 		var next_phase := phase + delta * 0.7
@@ -147,7 +155,7 @@ func set_highlight(value: bool) -> void:
 
 
 func _refresh() -> void:
-	collision_layer = 1 if kind == "clockwork" or (kind == "pool" and active) else 4
+	collision_layer = 0 if kind == "clockwork" and active else (1 if kind == "clockwork" or (kind == "pool" and active) else 4)
 	collision_mask = 0
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color("74c7ec")
@@ -156,7 +164,8 @@ func _refresh() -> void:
 		if not active:
 			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	if kind == "clockwork":
-		material.albedo_color = Color("b79ccc") if frozen_remaining > 0 else Color("c6b797")
+		material.albedo_color = Color("74c7ec") if active else Color("c6b797")
+		mesh.visible = not active
 	if _highlight:
 		material.emission_enabled = true
 		material.emission = material.albedo_color
@@ -166,7 +175,7 @@ func _refresh() -> void:
 		"vent": label.text = "UPDRAFT ON" if active else "WIND VENT"
 		"pool": label.text = "ICE PATH" if active else "WATER BASIN"
 		"stream": label.text = "CURRENT  ↑" if reversed else "CURRENT  ↓"
-		"clockwork": label.text = "MOVING RELIC"
+		"clockwork": label.text = "TIME GATE OPEN" if active else "MOVING TIME GATE"
 
 
 func snapshot() -> Dictionary:

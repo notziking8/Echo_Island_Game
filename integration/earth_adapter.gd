@@ -5,14 +5,15 @@ extends "res://systems/echo/earth_target.gd"
 func can_place(at: Vector3, size: Vector3) -> bool:
 	if not at.is_finite() or absf(at.x) > 60 or absf(at.z) > 80 or absf(at.y) > 30:
 		return false
-	for x in [-0.45, 0.45]:
-		for z in [-0.45, 0.45]:
-			var corner := at + Vector3(size.x * x, 0.2, size.z * z)
-			var ray := PhysicsRayQueryParameters3D.create(corner, corner - Vector3.UP * 0.5, 1)
-			ray.exclude = [get_rid()]
-			var hit := get_world_3d().direct_space_state.intersect_ray(ray)
-			if hit.is_empty() or hit["normal"].y < 0.8 or hit["collider"].name == "Ocean":
-				return false
+	if require_ground_support:
+		for x in [-0.45, 0.45]:
+			for z in [-0.45, 0.45]:
+				var corner := at + Vector3(size.x * x, 0.2, size.z * z)
+				var ray := PhysicsRayQueryParameters3D.create(corner, corner - Vector3.UP * 0.5, 1)
+				ray.exclude = [get_rid()]
+				var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+				if hit.is_empty() or hit["normal"].y < 0.8 or hit["collider"].name == "Ocean":
+					return false
 	var box := BoxShape3D.new()
 	box.size = size * 0.96
 	var query := PhysicsShapeQueryParameters3D.new()

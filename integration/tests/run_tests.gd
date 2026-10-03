@@ -36,6 +36,12 @@ func _run() -> void:
 	check(game.player is Player and game.world.get_node("Player") == game.player, "Uses Traversal's real player, not Echo's demo player")
 	check(game.combat is CombatSystem, "Uses team's CombatSystem")
 	check(game.combat._targets.size() == 4, "All four enemy archetypes registered")
+	game.echo.summon("water")
+	game.controls.target = game.targets["water_basin"]
+	check(game.controls.context_hint("echo_primary") == "Q — Freeze Crossing", "Environmental target changes Q hint to its required action")
+	var scout_for_hint: Node3D = game.combat._targets["scout"]
+	game.controls.target = scout_for_hint
+	check(game.controls.context_hint("echo_primary") == "Q — Water Strike" and game.controls.context_hint("echo_personal") == "E — Time Strike", "Nearby enemy shows separate Echo combat attacks for Q and E")
 	var interaction_keys := InputMap.action_get_events("interact")
 	check(interaction_keys.size() == 1 and interaction_keys[0].physical_keycode == KEY_F, "Interaction remapped to F")
 	check(InputMap.action_get_events("echo_personal")[0].physical_keycode == KEY_E, "E remains personal power")
@@ -66,8 +72,10 @@ func _run() -> void:
 	var scout: Node3D = game.combat._targets["scout"]
 	game.player.global_position = scout.global_position + Vector3(0, 0, 2)
 	responses.clear()
+	var scout_health_before: float = scout.health
 	game.echo.request_ability("earth", "stun", "scout", scout.global_position, "combat")
-	check(responses.size() == 1 and not responses[0]["success"] and game.echo.can_use("earth"), "Wrong element is rejected without consuming cooldown")
+	check(responses.size() == 1 and responses[0]["success"] and scout.health < scout_health_before, "Any selected Echo delivers its own combat attack")
+	game.echo._process(1.0)
 	game.player.global_position = Vector3(40, 10, 40)
 	responses.clear()
 	game.echo.request_ability("earth", "stun", "shellguard", Vector3.ZERO, "combat")

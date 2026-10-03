@@ -14,11 +14,42 @@ func _update_target() -> void:
 	var ray := PhysicsRayQueryParameters3D.create(start, start + camera.project_ray_normal(aim_position()) * 100, 5)
 	ray.exclude = [actor.get_rid()]
 	var hit := camera.get_world_3d().direct_space_state.intersect_ray(ray)
+	var aimed: Node3D
 	if not hit.is_empty() and (hit["collider"] is EarthTarget or hit["collider"].has_method("echo_action")):
-		var candidate: Node3D = hit["collider"]
-		if actor.global_position.distance_to(candidate.global_position) <= reach:
-			target = candidate
-			target.set_highlight(true)
+		aimed = hit["collider"]
+		if actor.global_position.distance_to(aimed.global_position) > reach:
+			aimed = null
+	# Aimed puzzle and environment targets outrank combat. Enemies are otherwise
+	# selected automatically once the player is close enough to fight.
+	if is_instance_valid(aimed) and not aimed.is_in_group("combat_targets") and _has_power_action(aimed):
+		target = aimed
+	else:
+		var nearest_distance := 4.5
+		for node: Node in get_tree().get_nodes_in_group("combat_targets"):
+			if not node is Node3D or float(node.get("health")) <= 0.0:
+				continue
+			var enemy := node as Node3D
+			var distance := actor.global_position.distance_to(enemy.global_position)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				target = enemy
+		if not is_instance_valid(target) and is_instance_valid(aimed):
+			target = aimed
+	if is_instance_valid(target):
+		target.set_highlight(true)
+
+
+func _has_power_action(candidate: Node3D) -> bool:
+	for element in [system.selected_power(), system.personal_power()]:
+		if not str(element).is_empty() and (not _action_for(candidate, element, false).is_empty() or not _action_for(candidate, element, true).is_empty()):
+			return true
+	return false
+
+
+func prompt() -> String:
+	if is_instance_valid(wheel) and wheel.is_open:
+		return "Release Tab to select. Esc cancels."
+	return context_hint("echo_primary") + "    " + context_hint("echo_personal")
 
 
 func _update_preview() -> void:

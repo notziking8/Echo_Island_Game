@@ -7,7 +7,7 @@ const SETTINGS := {
 	"freeze": {"duration_seconds": 4.0, "strength": 0.0},
 	"slow": {"duration_seconds": 6.0, "strength": 0.25},
 	"glide": {"duration_seconds": 8.0, "strength": 1.5},
-	"air_dash": {"duration_seconds": 0.25, "strength": 16.0},
+	"air_dash": {"duration_seconds": 0.5, "strength": 22.0},
 	"wind_current": {"duration_seconds": 0.0, "strength": 8.0},
 	"underwater_access": {"duration_seconds": 15.0, "strength": 4.0},
 	"freeze_object": {"duration_seconds": 6.0, "strength": 0.0},

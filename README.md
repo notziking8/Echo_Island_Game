@@ -1,32 +1,21 @@
 # Echo_Island_Game
 
-## Current local overhaul
-
-The nine-chapter campaign now includes regional art treatments, a quieter HUD,
-next-action guidance, contextual ancestral hints, 1–4 power selection, corrected
-generation handoffs, and chapter-entry saves. Wind crossings accept dash or glide
-and require reaching the other shore. See [the current direction and scope](campaign/DIRECTION.md).
-
-Open `project.godot` and press F5, or double-click `Play Echo Island.cmd` in this
-Windows workspace. A saved journey resumes at the current chapter's entrance;
-Enter/click continues and N starts over. Work in the current chapter resets on
-resume. This local update has not been deployed to the browser link below.
-
 ## Story campaign (main)
 
 [Play Echo Island in your browser](https://notziking8.github.io/Echo_Island_Game/).
 On `main`, open `project.godot` in Godot 4.7.2 and press **F5** for the new title
-screen and nine-scene campaign. Start a new journey or continue a saved chapter. Powers are discovered
+screen and nine-scene campaign. Press any key/click to start. Powers are discovered
 in story order; they are not all unlocked at the beginning.
 
-WASD/arrows move, mouse looks, Space jumps, left click strikes a targeted enemy
-within 3m. Hold Tab for the Echo wheel; Q uses the selected power; E uses your
-generation's personal power. F collects nearby awakened stones and continues
+WASD/arrows move, mouse looks, Space jumps, left click remains the normal strike
+against a targeted enemy within 3m. Hold Tab to summon an ancestor; Q uses that
+Echo, and E always uses your current personal power. Aim at a required object or
+approach an enemy: the on-screen Q/E hints show the contextual Echo action. F collects nearby awakened stones and continues
 through completed exit arches. X dismisses, R respawns, Esc releases the mouse.
 Five optional relics are spread across Arrival, Overgrown Path, Flooded Trail,
 Forbidden Interior, and Island Core.
 
-This is a **playable procedural-art campaign**, not finished production character art.
+This is a **procedural-art playable first pass**, not the finished reference art.
 The inherited Combat/Echo/Traversal logic is preserved. Player health/damage,
 dodge, ranged firing, and multi-element boss phases still need their owners'
 implementations. Cosmetic bows/tridents do not change the existing melee attack.
@@ -49,12 +38,12 @@ Combat project. This is a development playtest, not a finished release.
    ```
 
 2. Open/import the extracted `project.godot` in **Godot 4.7.2**.
-3. Open `integration/team_game.tscn` and press **F6** for the original playground.
-   **F5** now starts the nine-chapter campaign.
+3. Press **F5**. The main scene is `integration/team_game.tscn`.
 
 All powers start unlocked. Arrow keys or WASD move, mouse looks, and Space jumps.
-Hold **Tab**, choose with the mouse or arrows, and release to select a power.
-**Q** uses the selected power; **E** uses personal Time. **F** interacts,
+Hold **Tab**, choose an ancestor with the mouse or arrows, and release to select.
+**Q** uses that Echo; **E** uses personal Time. Both buttons adapt to the aimed
+environment target or nearby enemy, while left click remains the normal strike. **F** interacts,
 **X** dismisses an ancestor, and **R** respawns at the checkpoint. **Esc** frees
 or captures the mouse. Left-click within three units strikes an enemy.
 

@@ -4,7 +4,6 @@ var failures := 0
 var checks := 0
 
 func _initialize() -> void:
-	create_timer(30).timeout.connect(func(): push_error("FAIL: campaign test timeout"); quit(1))
 	run.call_deferred()
 
 func check(value: bool, label: String) -> void:
@@ -16,9 +15,7 @@ func check(value: bool, label: String) -> void:
 		print("PASS: ", label)
 
 func run() -> void:
-	await checkpoint_checks()
 	var game := preload("res://campaign/main.tscn").instantiate()
-	game.persistence_enabled = false
 	root.add_child(game)
 	check(game.mode == "title", "starts at title")
 	check(game.echo.collected_stones.is_empty(), "no powers unlocked at start")
@@ -29,21 +26,36 @@ func run() -> void:
 		await physics_frame
 		check(stage.initialized, "scene %d initializes" % (i + 1))
 		check(stage.echo.generation == Catalog.STAGES[i].generation, "correct generation %d" % (i + 1))
-		check(not stage.next_objective().title.is_empty(), "scene has actionable guidance")
-		check(stage.next_objective().at.is_finite(), "objective beacon has finite position")
-		if i in [2, 4, 6]:
-			check(not game.echo.focus_personal and game.echo.personal_power().is_empty(), "new keeper has no stale personal selection")
-			check(game.echo.valid_snapshot(game.echo.snapshot()), "generation handoff creates restorable state")
-			var quick := InputEventKey.new()
-			quick.physical_keycode = KEY_1
-			quick.pressed = true
-			stage._unhandled_input(quick)
-			check(game.echo.active_echo == "earth", "quick select calls inherited Earth")
 		check(not stage.can_exit(), "scene %d cannot skip objectives" % (i + 1))
 		check(stage.player.get_script() == preload("res://integration/player_adapter.gd"), "uses original player adapter")
 		# Freeze AI during contract checks, not the player or receivers.
 		for enemy in stage.enemies:
 			enemy.set_physics_process(false)
+		var guard: Node = stage.enemies[0]
+		var health_before_basic: float = guard.health
+		var ordinary_hit: bool = guard.take_damage(10.0, stage.player.global_position)
+		if guard.guard_blocks_front and not guard.guard_broken:
+			check(not ordinary_hit and is_equal_approx(guard.health, health_before_basic), "armored guard requires its Echo power before ordinary hits can finish it")
+		else:
+			check(ordinary_hit and guard.health < health_before_basic, "ordinary attacks still damage unarmored enemies")
+		if stage.targets.has("rock"):
+			var wall_size: Vector3 = stage.targets["rock"].get("blocking_size")
+			check(wall_size.x >= 36.0 and wall_size.y >= 6.0, "Earth wall spans the route and cannot be jumped over")
+			check(_wall_blocks_route(stage, 3.0), "Earth wall physically blocks the route")
+		if stage.targets.has("platform") and i in [3, 8]:
+			check(stage.targets["platform"].global_position.y < 0.0 and stage.targets["platform"].get("raised_size").z >= 7.0, "Earth platform sits in a deep, non-jumpable gap")
+			check(not _ground_below(stage, 0.0, -8.5), "the gap has no ordinary ground before Earth raises the platform")
+		if i in [3, 4, 5]:
+			var dash_gap_z := -31.5 if i == 3 else -8.5
+			check(not _ground_below(stage, 0.0, dash_gap_z), "Wind route has no walkable or jumpable floor")
+		if stage.targets.has("pool") and i >= 5:
+			var pool_size: Vector3 = stage.targets["pool"].get("custom_size")
+			check(pool_size.z >= 9.0 and stage.targets["pool"].collision_layer == 4, "unfrozen Water crossing is a real gap")
+			check(not _ground_below(stage, 0.0, stage.targets["pool"].global_position.z), "unfrozen water has no walkable collision")
+		if stage.targets.has("vent"):
+			check(stage.targets["vent"].global_position.y < 0.1 and stage.targets.has("pool"), "Wind updraft is required to reach the raised route")
+		if stage.targets.has("clockwork"):
+			check(stage.targets["clockwork"].collision_layer == 1, "Time gate physically blocks the exit before freeze")
 		# Discover early stones through the same F interaction as the player.
 		if i == 1:
 			check(not stage.can_collect_stone(), "Earth stone guarded")
@@ -69,34 +81,35 @@ func run() -> void:
 					target = stage.enemies[0]
 					channel = "combat"
 			if target != stage.player:
-				stage.player.global_position = target.global_position + Vector3(0, 0.1, 4)
-			if task == "air_dash":
-				stage.player.position = Vector3(0, 0.15, 6)
-				game.echo.request_ability(element, task, target.target_id, target.global_position, channel)
-				check(not stage.wind_crossing_armed and task not in stage.completed, "casting Wind away from channel cannot complete crossing")
-				game.echo.cooldowns.clear()
-				stage.player.position = Vector3(0, 0.15, -6)
+				stage.player.global_position = target.global_position + Vector3(0, 0.1, 5 if task == "freeze_water" else 4)
 			await physics_frame
 			var id: String = game.echo.request_ability(element, task, target.target_id, target.global_position, channel, {"origin": stage.player.global_position, "direction": Vector3.FORWARD})
 			check(not id.is_empty(), "request accepted: %d %s" % [i + 1, task])
-			if task == "air_dash":
-				check(task not in stage.completed, "Wind requires reaching the other shore")
-				stage.player.position = Vector3(0, 0.15, -9 if i == 5 else -17)
-				stage._physics_process(0)
 			if task == "crack":
 				check(task not in stage.completed, "one crack does not count as clearing rock")
 				game.echo.cooldowns.clear()
 				game.echo.request_ability(element, task, target.target_id, target.global_position, channel, {"origin": stage.player.global_position})
 			check(task in stage.completed, "receiver acknowledged: %d %s" % [i + 1, task])
+			match task:
+				"crack": check(target.damage == 2 and target.collision_layer == 0, "Earth removes the route-blocking wall")
+				"raise_platform": check(target.form == "platform" and target.collision_layer == 1, "Earth raises a solid bridge across the gap")
+				"air_dash": check(stage.player.dash_remaining >= 0.5 and stage.player.dash_speed >= 22.0, "Wind dash has enough force and duration for the gap")
+				"wind_current":
+					stage.player.global_position = target.global_position
+					stage._physics_process(0.016)
+					stage.player._apply_horizontal_movement(0.016)
+					check(target.active and stage.player.velocity.y >= 8.0, "Wind opens and powers the updraft route")
+				"freeze_water": check(target.active and target.collision_layer == 1, "Water makes the crossing physically solid")
+				"freeze_object": check(target.active and target.collision_layer == 0 and not target.mesh.visible, "Time opens the blocking gate")
 		if not str(Catalog.STAGES[i].stone).is_empty() and Catalog.STAGES[i].stone not in game.echo.collected_stones:
 			_interact_stone(stage)
 		for enemy in stage.enemies:
 			enemy.take_damage(enemy.health, Vector3.INF)
 		if "stun" in stage.completed:
 			stage.completed.erase("stun")
-			check("stun" not in stage.missing_tasks(), "defeating guard without stun cannot softlock exit")
+			check("stun" in stage.missing_tasks(), "stun remains required until the Echo power is used")
+			stage.completed.append("stun")
 		check(stage.can_exit(), "scene %d exits after actual receiver success" % (i + 1))
-		check(stage.next_objective().at == stage.exit_at, "completed chapter points toward exit")
 		check(stage.effects.rings.size() == 12, "VFX pool bounded")
 		game.echo.cooldowns.clear()
 	check(game.echo.collected_stones.size() == 4, "all four stones collected in order")
@@ -108,7 +121,6 @@ func run() -> void:
 	game._finish_stage()
 	check(game.mode == "ending", "final scene reaches ending")
 	game.free()
-	await create_timer(0.15).timeout
 	print("CAMPAIGN TESTS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
@@ -120,50 +132,15 @@ func _interact_stone(stage: Node) -> void:
 	event.pressed = true
 	stage._unhandled_input(event)
 	check(stage.data.stone in stage.echo.collected_stones, "F collected " + str(stage.data.stone))
-	check(stage.echo.selected_power() == stage.data.stone, "discovery focuses the new personal gift")
 
-func checkpoint_checks() -> void:
-	var storage = preload("res://campaign/checkpoint.gd")
-	var echo := preload("res://systems/echo/echo_system.gd").new()
-	echo.enforce_story_order = true
-	root.add_child(echo)
-	var entry := {"version": 1, "stage": 0, "echo": echo.snapshot(), "relics": []}
-	check(storage.valid(entry, echo), "fresh chapter checkpoint valid")
-	var path := "user://echo_island_checkpoint_regression.json"
-	check(storage.write_checkpoint(entry, echo, path), "checkpoint writes successfully")
-	check(not storage.read_checkpoint(echo, path).is_empty(), "checkpoint survives JSON round trip")
-	check(echo.restore(storage.read_checkpoint(echo, path).echo), "saved Echo state restores")
-	var bad := entry.duplicate(true)
-	bad.stage = 8
-	check(not storage.valid(bad, echo), "reject chapter beyond inherited powers")
-	bad = entry.duplicate(true)
-	bad.stage = 0.5
-	check(not storage.valid(bad, echo), "reject fractional chapter")
-	bad = entry.duplicate(true)
-	bad.relics = [0]
-	check(not storage.valid(bad, echo), "reject current chapter relic in entry checkpoint")
-	bad = entry.duplicate(true)
-	bad.echo.story_order = false
-	check(not storage.valid(bad, echo), "reject sandbox unlock state in campaign save")
-	echo.collect_stone("earth")
-	echo.select_power("earth")
-	check(echo.focus_personal, "Earth discovery selects personal focus")
-	check(echo.begin_generation(2), "generation advances through public API")
-	check(not echo.focus_personal and echo.valid_snapshot(echo.snapshot()), "handoff resets focus and remains serializable")
-	entry = {"version": 1, "stage": 2, "echo": echo.snapshot(), "relics": [0]}
-	check(storage.write_checkpoint(entry, echo, path), "atomic checkpoint replacement succeeds")
-	check(storage.read_checkpoint(echo, path).get("stage", -1) == 2, "replacement contains newer chapter")
-	bad = entry.duplicate(true)
-	bad.relics = [0, 0]
-	check(not storage.valid(bad, echo), "reject duplicate relics")
-	bad = entry.duplicate(true)
-	bad.echo.focus_personal = true
-	check(not storage.valid(bad, echo), "reject personal selection before discovery")
-	check(not storage.write_checkpoint(bad, echo, path), "invalid save cannot overwrite valid checkpoint")
-	check(storage.read_checkpoint(echo, path).get("stage", -1) == 2, "last valid checkpoint preserved")
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string("{broken-json")
-	file.close()
-	check(storage.read_checkpoint(echo, path).is_empty(), "corrupt checkpoint safely returns to title")
-	DirAccess.remove_absolute(path)
-	echo.free()
+
+func _ground_below(stage: Node, x: float, z: float) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(Vector3(x, 2.0, z), Vector3(x, -0.6, z), 1)
+	query.exclude = [stage.player.get_rid()]
+	return not stage.get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+func _wall_blocks_route(stage: Node, z: float) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(Vector3(0, 1.0, z + 1.0), Vector3(0, 1.0, z - 1.0), 1)
+	query.exclude = [stage.player.get_rid()]
+	return not stage.get_world_3d().direct_space_state.intersect_ray(query).is_empty()

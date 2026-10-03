@@ -44,10 +44,7 @@ func _process(_delta: float) -> void:
 
 
 func weakness() -> String:
-	for element in ["earth", "wind", "water", "time"]:
-		if not echo_action(element).is_empty():
-			return element
-	return ""
+	return _weakness_for_archetype()
 
 
 func set_highlight(value: bool) -> void:
