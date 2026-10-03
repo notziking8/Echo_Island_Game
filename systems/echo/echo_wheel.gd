@@ -46,7 +46,7 @@ func close(commit: bool = true) -> void:
 
 
 func available(index: int) -> bool:
-	return ELEMENTS[index] in system.unlocked_echoes() or ELEMENTS[index] == system.personal_power()
+	return ELEMENTS[index] in system.unlocked_echoes()
 
 
 func select_direction(direction: Vector2) -> void:

@@ -56,7 +56,11 @@ func _physics_process(delta: float) -> void:
 				var element: String = system.selected_power(input_action == "echo_personal")
 				var candidate: Node3D = target
 				if _action_for(candidate, element, false).is_empty() and _action_for(candidate, element, true).is_empty():
-					candidate = actor
+					var enemy := _nearby_combat_target(element)
+					if is_instance_valid(enemy):
+						candidate = enemy
+					elif not (is_instance_valid(candidate) and candidate.is_in_group("combat_targets")):
+						candidate = actor
 				if system.can_use(element) and (not _action_for(candidate, element, false).is_empty() or not _action_for(candidate, element, true).is_empty()):
 					_pressed_action = input_action
 					_element = element
@@ -71,7 +75,7 @@ func _physics_process(delta: float) -> void:
 		if actor.global_position.distance_to(_locked_target.global_position) > reach:
 			cancel()
 			return
-		if _elapsed >= hold_seconds and _locked_target is EarthTarget and _locked_target.kind == "rock":
+		if _elapsed >= hold_seconds and _locked_target is EarthTarget and _locked_target.kind == "rock" and _action_for(_locked_target, _element, true) == "move":
 			_update_preview()
 			if _pressed_action.is_empty():
 				return
@@ -112,6 +116,55 @@ func _action_for(candidate: Node3D, element: String, held: bool) -> String:
 	if candidate.has_method("echo_action"):
 		return candidate.echo_action(element, held)
 	return ""
+
+
+func _nearby_combat_target(element: String) -> Node3D:
+	var nearest: Node3D
+	var nearest_distance := minf(reach, 4.5)
+	for node: Node in get_tree().get_nodes_in_group("combat_targets"):
+		if not node is Node3D or float(node.get("health")) <= 0.0:
+			continue
+		var enemy := node as Node3D
+		var distance := actor.global_position.distance_to(enemy.global_position)
+		if distance < nearest_distance and not _action_for(enemy, element, false).is_empty():
+			nearest = enemy
+			nearest_distance = distance
+	return nearest
+
+
+func context_hint(input_action: String) -> String:
+	var key := "Q" if input_action == "echo_primary" else "E"
+	var element: String = system.selected_power(input_action == "echo_personal")
+	if element.is_empty():
+		if input_action == "echo_primary" and not system.unlocked_echoes().is_empty():
+			return key + " — Select Echo (Tab)"
+		return key + " — Locked"
+	var held := _pressed_action == input_action and _elapsed >= hold_seconds
+	var candidate: Node3D = _locked_target if _pressed_action == input_action and is_instance_valid(_locked_target) else target
+	var action := _action_for(candidate, element, held)
+	if action.is_empty():
+		var enemy := _nearby_combat_target(element)
+		if is_instance_valid(enemy):
+			candidate = enemy
+			action = _action_for(candidate, element, held)
+	if action.is_empty() and not (is_instance_valid(candidate) and candidate.is_in_group("combat_targets")):
+		candidate = actor
+		action = _action_for(candidate, element, held)
+	if action.is_empty() and is_instance_valid(candidate):
+		action = _action_for(candidate, element, true)
+	if action.is_empty():
+		return key + " — " + element.capitalize() + " has no target"
+	if is_instance_valid(candidate) and candidate.is_in_group("combat_targets"):
+		return key + " — " + element.capitalize() + " Strike"
+	var labels := {
+		"crack": "Break Earth Wall", "move": "Move Earth", "raise_platform": "Raise Platform",
+		"raise_barrier": "Raise Barrier", "lower": "Lower Earth", "reveal": "Reveal",
+		"air_dash": "Wind Dash", "glide": "Glide", "wind_current": "Activate Updraft",
+		"freeze_water": "Freeze Crossing", "underwater_access": "Dive", "redirect_current": "Redirect Current",
+		"freeze_object": "Freeze Time Gate", "reset_object": "Reset Time Object",
+		"stun": "Earth Stun", "push": "Wind Push", "freeze": "Water Freeze", "slow": "Time Slow"
+	}
+	return key + " — " + str(labels.get(action, action.replace("_", " ").capitalize()))
 
 
 func _update_target() -> void:

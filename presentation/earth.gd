@@ -5,11 +5,10 @@ func _refresh() -> void:
 	caption.hide()
 	var size := dimensions()
 	if kind == "rock":
-		var sphere := SphereMesh.new()
-		sphere.radius = 0.5
-		sphere.height = 1
-		visual.mesh = sphere
-		visual.scale = size
+		var wall := BoxMesh.new()
+		wall.size = size
+		visual.mesh = wall
+		visual.scale = Vector3.ONE
 	else:
 		var cylinder := CylinderMesh.new()
 		cylinder.top_radius = 0.5

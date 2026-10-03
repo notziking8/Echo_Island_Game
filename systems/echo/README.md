@@ -12,14 +12,19 @@ unlocked; no generation sequence or stone collection is required to test it.
 | Arrow keys | Move; choose a wheel direction while Tab is held |
 | Space | Jump / swim upward |
 | Hold Tab | Open wheel; hover or use arrows, then release to select |
-| Q | Selected contextual power: tap or hold as shown in the prompt |
-| E | Your personal power, alongside the summoned ancestor |
+| Q | Summoned ancestor's contextual power |
+| E | Your personal power |
 | X | Dismiss ancestor |
 | Esc | Cancel wheel or charged action |
 
 Earth, Wind, and Water are ancestors. Time remains the descendant's own power.
-Choosing Time in the wheel focuses Q on Time while leaving the ancestor beside
-the player; E also uses Time. Choose an ancestor again to focus Q on their power.
+Q always belongs to the summoned ancestor, and E always belongs to the
+descendant. The wheel selects ancestors and never moves the personal power onto Q.
+
+The campaign resolves each button from context: aimed puzzle and environment
+targets take priority, followed by nearby enemies and then a suitable movement
+power. The HUD shows each button's current action. Normal left-click combat stays
+separate from Echo combat attacks.
 
 | Power | Playable actions |
 | --- | --- |

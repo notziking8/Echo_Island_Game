@@ -6,6 +6,7 @@ var channel: String = "traversal"
 var wheel_open: bool = false
 var glide_remaining: float = 0.0
 var dash_remaining: float = 0.0
+var dash_speed: float = 16.0
 var underwater_remaining: float = 0.0
 var dash_direction := Vector3.FORWARD
 var in_water: bool = false
@@ -45,8 +46,8 @@ func _apply_horizontal_movement(delta: float) -> void:
 	else:
 		super._apply_horizontal_movement(delta)
 		if dash_remaining > 0:
-			velocity.x = dash_direction.x * 16.0
-			velocity.z = dash_direction.z * 16.0
+			velocity.x = dash_direction.x * dash_speed
+			velocity.z = dash_direction.z * dash_speed
 		velocity.x += external_velocity.x * delta
 		velocity.z += external_velocity.z * delta
 	velocity.y = maxf(velocity.y, external_velocity.y) if external_velocity.y > 0 else velocity.y
@@ -96,7 +97,8 @@ func apply_event(event: Dictionary) -> bool:
 			dash_direction = event.get("direction", facing)
 			dash_direction.y = 0
 			dash_direction = dash_direction.normalized() if dash_direction.length() > 0.01 else facing
-			dash_remaining = float(event.get("duration_seconds", 0.25))
+			dash_speed = float(event.get("strength", 22.0))
+			dash_remaining = float(event.get("duration_seconds", 0.5))
 			velocity.y = maxf(velocity.y, 1.5)
 		"underwater_access":
 			if not in_water:

@@ -10,6 +10,7 @@ func _init() -> void:
 	var shellguard = CombatEnemyScript.new()
 	shellguard.target_id = "shellguard"
 	shellguard.archetype = CombatEnemyScript.Archetype.SHELLGUARD
+	shellguard.health = 80.0
 	root.add_child(shellguard)
 	assert(shellguard.echo_action("earth") == "stun")
 	assert(shellguard.apply_echo_event({"target_id": "shellguard", "echo_id": "earth", "intended_effect": "stun"}))
