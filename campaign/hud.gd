@@ -52,10 +52,11 @@ func _draw() -> void:
 		draw_rect(Rect2(w - 290, 59, 244 * ratio, 8), Art.CORAL)
 		text(Vector2(w - 290, 89), "%d%%  ·  %s" % [roundi(ratio * 100), CombatEnemy.State.keys()[target.state].capitalize()], 14)
 		text(Vector2(w - 290, 112), "Weakness: " + target.weakness().capitalize(), 14)
-	panel(Rect2(20, h - 112, 320, 92))
-	text(Vector2(36, h - 84), "WASD / arrows  Move    Space  Jump", 14)
-	text(Vector2(36, h - 60), "LMB  Strike    F  Interact    R  Respawn", 14)
-	text(Vector2(36, h - 36), "Tab  Wheel    Q / E  Power    X  Dismiss", 14)
+	panel(Rect2(20, h - 138, 280, 118))
+	text(Vector2(36, h - 110), "WASD  Move    Space  Jump / Echo Step", 14)
+	text(Vector2(36, h - 86), "Shift / C  Slide    W (air)  Mantle", 14)
+	text(Vector2(36, h - 62), "LMB  Strike    F  Interact    R  Respawn", 14)
+	text(Vector2(36, h - 38), "Tab  Wheel    Q / E  Power    X  Dismiss", 14)
 	for i in 4:
 		var element: String = manager.echo.ELEMENTS[i]
 		var unlocked: bool = element in manager.echo.collected_stones

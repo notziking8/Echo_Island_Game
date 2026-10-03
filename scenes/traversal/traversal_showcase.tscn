@@ -1,0 +1,260 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/traversal/showcase_course.gd" id="1_sc"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_plyr"]
+[ext_resource type="PackedScene" path="res://scenes/traversal/showcase_ui.tscn" id="3_ui"]
+[ext_resource type="PackedScene" path="res://scenes/checkpoints/checkpoint.tscn" id="4_ckpt"]
+[ext_resource type="PackedScene" path="res://scenes/traversal/launch_pad.tscn" id="5_lpad"]
+[ext_resource type="PackedScene" path="res://scenes/traversal/moving_platform.tscn" id="6_mplat"]
+[ext_resource type="Script" path="res://scripts/traversal/course_gate.gd" id="7_gate"]
+[ext_resource type="Script" path="res://scripts/test/death_zone.gd" id="8_dzone"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.455, 0.78, 0.925, 1)
+sky_horizon_color = Color(0.835, 0.941, 0.867, 1)
+ground_bottom_color = Color(0.416, 0.714, 0.757, 1)
+ground_horizon_color = Color(0.835, 0.941, 0.867, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_showcase"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 3
+ambient_light_color = Color(0.769, 0.882, 0.922, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_death"]
+size = Vector3(300, 4, 300)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_start"]
+size = Vector3(10, 1, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grass"]
+albedo_color = Color(0.494, 0.851, 0.341, 1)
+roughness = 0.82
+
+[sub_resource type="BoxMesh" id="BoxMesh_start"]
+size = Vector3(10, 1, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp"]
+size = Vector3(5, 0.4, 22.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ramp"]
+albedo_color = Color(0.773, 0.655, 0.463, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_ramp"]
+size = Vector3(5, 0.4, 22.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_curb"]
+size = Vector3(0.3, 0.6, 22.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_stone"]
+albedo_color = Color(0.4, 0.45, 0.5, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_curb"]
+size = Vector3(0.3, 0.6, 22.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_land1"]
+size = Vector3(10, 1, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_land1"]
+size = Vector3(10, 1, 12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cliff"]
+size = Vector3(8, 8.5, 8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cliff"]
+size = Vector3(8, 8.5, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_echogap"]
+size = Vector3(8, 1, 7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_echogap"]
+size = Vector3(8, 1, 7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_finish"]
+size = Vector3(10, 1, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_finish"]
+size = Vector3(10, 1, 12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
+size = Vector3(6, 4, 2)
+
+[sub_resource type="TorusMesh" id="TorusMesh_arch"]
+inner_radius = 2.2
+outer_radius = 2.7
+rings = 24
+ring_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold"]
+albedo_color = Color(1, 0.82, 0.4, 1)
+emission_enabled = true
+emission = Color(1, 0.82, 0.4, 1)
+emission_energy_multiplier = 0.6
+roughness = 0.5
+
+[node name="TraversalShowcase" type="Node3D"]
+script = ExtResource("1_sc")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_showcase")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.848, -0.327, 0.417, 0, 0.786, 0.618, -0.53, -0.524, 0.667, 0, 15, 0)
+light_color = Color(1, 0.941, 0.812, 1)
+light_energy = 0.85
+shadow_enabled = true
+
+[node name="DeathZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6, -50)
+script = ExtResource("8_dzone")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeathZone"]
+shape = SubResource("BoxShape3D_death")
+
+[node name="ShowcaseUI" parent="." instance=ExtResource("3_ui")]
+
+[node name="Player" parent="." instance=ExtResource("2_plyr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.2, 17)
+echo_step_unlocked = true
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="StartCheckpoint" parent="Checkpoints" instance=ExtResource("4_ckpt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 17)
+
+[node name="Checkpoint1" parent="Checkpoints" instance=ExtResource("4_ckpt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -26)
+
+[node name="Checkpoint2" parent="Checkpoints" instance=ExtResource("4_ckpt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, -56)
+
+[node name="Checkpoint3" parent="Checkpoints" instance=ExtResource("4_ckpt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, -73)
+
+[node name="Gates" type="Node3D" parent="."]
+
+[node name="StartGate" type="Area3D" parent="Gates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 13.5)
+script = ExtResource("7_gate")
+gate_type = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gates/StartGate"]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="FinishGate" type="Area3D" parent="Gates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, -101)
+script = ExtResource("7_gate")
+gate_type = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gates/FinishGate"]
+shape = SubResource("BoxShape3D_gate")
+
+[node name="VisualArches" type="Node3D" parent="."]
+
+[node name="StartArch" type="MeshInstance3D" parent="VisualArches"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 7, 13.5)
+material_override = SubResource("StandardMaterial3D_gold")
+mesh = SubResource("TorusMesh_arch")
+
+[node name="FinishArch" type="MeshInstance3D" parent="VisualArches"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 10, -101)
+material_override = SubResource("StandardMaterial3D_gold")
+mesh = SubResource("TorusMesh_arch")
+
+[node name="CourseGeometry" type="Node3D" parent="."]
+
+[node name="StartIsland" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 17)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/StartIsland"]
+shape = SubResource("BoxShape3D_start")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CourseGeometry/StartIsland"]
+material_override = SubResource("StandardMaterial3D_grass")
+mesh = SubResource("BoxMesh_start")
+
+[node name="SlideRamp" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 0.978148, 0.207912, 0, -0.207912, 0.978148, 0, 2.7, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/SlideRamp"]
+shape = SubResource("BoxShape3D_ramp")
+
+[node name="RampMesh" type="MeshInstance3D" parent="CourseGeometry/SlideRamp"]
+material_override = SubResource("StandardMaterial3D_ramp")
+mesh = SubResource("BoxMesh_ramp")
+
+[node name="LeftCurb" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 0.978148, 0.207912, 0, -0.207912, 0.978148, -2.6, 2.9, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/LeftCurb"]
+shape = SubResource("BoxShape3D_curb")
+
+[node name="CurbMesh" type="MeshInstance3D" parent="CourseGeometry/LeftCurb"]
+material_override = SubResource("StandardMaterial3D_stone")
+mesh = SubResource("BoxMesh_curb")
+
+[node name="RightCurb" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 0.978148, 0.207912, 0, -0.207912, 0.978148, 2.6, 2.9, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/RightCurb"]
+shape = SubResource("BoxShape3D_curb")
+
+[node name="CurbMesh" type="MeshInstance3D" parent="CourseGeometry/RightCurb"]
+material_override = SubResource("StandardMaterial3D_stone")
+mesh = SubResource("BoxMesh_curb")
+
+[node name="MomentumLanding" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -30)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/MomentumLanding"]
+shape = SubResource("BoxShape3D_land1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CourseGeometry/MomentumLanding"]
+material_override = SubResource("StandardMaterial3D_grass")
+mesh = SubResource("BoxMesh_land1")
+
+[node name="LaunchPad" parent="CourseGeometry" instance=ExtResource("5_lpad")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -33)
+launch_velocity = Vector3(0, 14.5, -13.5)
+
+[node name="MantleCliff" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.25, -57)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/MantleCliff"]
+shape = SubResource("BoxShape3D_cliff")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CourseGeometry/MantleCliff"]
+material_override = SubResource("StandardMaterial3D_stone")
+mesh = SubResource("BoxMesh_cliff")
+
+[node name="EchoStepLanding" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, -74)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/EchoStepLanding"]
+shape = SubResource("BoxShape3D_echogap")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CourseGeometry/EchoStepLanding"]
+material_override = SubResource("StandardMaterial3D_grass")
+mesh = SubResource("BoxMesh_echogap")
+
+[node name="MovingPlatform" parent="CourseGeometry" instance=ExtResource("6_mplat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.4, -80)
+travel_offset = Vector3(0, 0.4, -12.5)
+travel_time = 3.5
+
+[node name="FinishIsland" type="StaticBody3D" parent="CourseGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.3, -101)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CourseGeometry/FinishIsland"]
+shape = SubResource("BoxShape3D_finish")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CourseGeometry/FinishIsland"]
+material_override = SubResource("StandardMaterial3D_grass")
+mesh = SubResource("BoxMesh_finish")

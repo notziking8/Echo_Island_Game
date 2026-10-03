@@ -1,7 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://campaign/stage.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/traversal/moving_platform.tscn" id="2_mplat"]
 
 [node name="forbidden_interior" type="Node3D"]
 script = ExtResource("1")
 stage_index = 6
+
+[node name="MovingPlatform" parent="." instance=ExtResource("2_mplat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.2, -10.5)
+travel_offset = Vector3(0, 0, -5.5)
+travel_time = 3.5

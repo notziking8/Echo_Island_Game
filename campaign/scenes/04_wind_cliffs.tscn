@@ -1,7 +1,32 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://campaign/stage.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/traversal/launch_pad.tscn" id="2_lpad"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cliff"]
+size = Vector3(3.5, 4.5, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cliff"]
+albedo_color = Color(0.78, 0.72, 0.59, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_cliff"]
+size = Vector3(3.5, 4.5, 3)
 
 [node name="wind_cliffs" type="Node3D"]
 script = ExtResource("1")
 stage_index = 3
+
+[node name="LaunchPad" parent="." instance=ExtResource("2_lpad")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -4)
+launch_velocity = Vector3(0, 10.5, -7)
+
+[node name="MantleCliff" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 2.25, -9.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MantleCliff"]
+shape = SubResource("BoxShape3D_cliff")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="MantleCliff"]
+material_override = SubResource("StandardMaterial3D_cliff")
+mesh = SubResource("BoxMesh_cliff")

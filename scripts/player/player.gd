@@ -193,13 +193,13 @@ func _process_mantling(delta: float) -> void:
 		mantled.emit(mantle_target_pos)
 
 func _process_sliding(delta: float) -> void:
-	if not is_on_floor():
+	# Slide jump carries forward momentum (check before falling check for coyote jump responsiveness)
+	if Input.is_action_just_pressed("jump"):
+		velocity.y = jump_velocity * 1.05
 		transition_to(MovementState.FALLING)
 		return
 
-	# Slide jump carries forward momentum
-	if Input.is_action_just_pressed("jump"):
-		velocity.y = jump_velocity * 1.05
+	if not is_on_floor():
 		transition_to(MovementState.FALLING)
 		return
 
@@ -338,16 +338,35 @@ func _apply_horizontal_movement(delta: float) -> void:
 		else:
 			move_direction = Vector3(input_dir.x, 0.0, input_dir.y).normalized()
 
+	var current_h_speed: float = Vector2(velocity.x, velocity.z).length()
+
 	if move_direction != Vector3.ZERO:
-		velocity.x = move_toward(velocity.x, move_direction.x * move_speed, acceleration * delta)
-		velocity.z = move_toward(velocity.z, move_direction.z * move_speed, acceleration * delta)
+		if current_state == MovementState.FALLING and current_h_speed > move_speed:
+			# Preserve high airborne momentum (e.g. from slide jump or launch pad)
+			# Apply gentle air drag rather than sudden ground deceleration
+			var air_drag: float = 3.2
+			var new_speed: float = move_toward(current_h_speed, move_speed, air_drag * delta)
+			var cur_h_dir: Vector3 = Vector3(velocity.x, 0.0, velocity.z).normalized()
+			var steer_dir: Vector3 = cur_h_dir.lerp(move_direction, 2.5 * delta).normalized()
+			velocity.x = steer_dir.x * new_speed
+			velocity.z = steer_dir.z * new_speed
+		else:
+			velocity.x = move_toward(velocity.x, move_direction.x * move_speed, acceleration * delta)
+			velocity.z = move_toward(velocity.z, move_direction.z * move_speed, acceleration * delta)
 		
 		if visuals:
 			var target_rot_y: float = atan2(-move_direction.x, -move_direction.z)
 			visuals.rotation.y = lerp_angle(visuals.rotation.y, target_rot_y, rotation_speed * delta)
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
-		velocity.z = move_toward(velocity.z, 0.0, deceleration * delta)
+		if current_state == MovementState.FALLING and current_h_speed > move_speed:
+			var air_drag: float = 2.0
+			var new_speed: float = move_toward(current_h_speed, 0.0, air_drag * delta)
+			var cur_h_dir: Vector3 = Vector3(velocity.x, 0.0, velocity.z).normalized()
+			velocity.x = cur_h_dir.x * new_speed
+			velocity.z = cur_h_dir.z * new_speed
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
+			velocity.z = move_toward(velocity.z, 0.0, deceleration * delta)
 
 func get_state_name() -> String:
 	match current_state:
@@ -578,6 +597,11 @@ func set_checkpoint(checkpoint: Node3D) -> void:
 		current_checkpoint.deactivate()
 	current_checkpoint = checkpoint
 	print("[Player] Active checkpoint set to: %s" % checkpoint.name)
+
+func launch(launch_velocity: Vector3) -> void:
+	velocity = launch_velocity
+	transition_to(MovementState.FALLING)
+	print("[Player] Launched with velocity: %s" % str(launch_velocity))
 
 func respawn() -> void:
 	velocity = Vector3.ZERO

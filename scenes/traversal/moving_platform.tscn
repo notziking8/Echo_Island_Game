@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/traversal/moving_platform.gd" id="1_mp"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_plat"]
+size = Vector3(4, 0.6, 4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_plat"]
+albedo_color = Color(0.42, 0.46, 0.5, 1)
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="BoxMesh_plat"]
+size = Vector3(4, 0.6, 4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rune"]
+albedo_color = Color(0.45, 0.78, 0.92, 1)
+emission_enabled = true
+emission = Color(0.45, 0.78, 0.92, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rune"]
+top_radius = 1.2
+bottom_radius = 1.2
+height = 0.62
+radial_segments = 16
+
+[node name="MovingPlatform" type="AnimatableBody3D"]
+script = ExtResource("1_mp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_plat")
+
+[node name="PlatformMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_plat")
+mesh = SubResource("BoxMesh_plat")
+
+[node name="RuneMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_rune")
+mesh = SubResource("CylinderMesh_rune")
