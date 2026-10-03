@@ -134,26 +134,26 @@ func _run() -> void:
 	controls.set_physics_process(false)
 	controls.target = fresh_rock
 	await process_frame
-	Input.action_press("echo_primary")
+	Input.action_press("echo_personal")
 	controls._physics_process(0.01)
 	await process_frame
-	Input.action_release("echo_primary")
+	Input.action_release("echo_personal")
 	controls._physics_process(0.05)
 	check(input_events.size() == 1 and input_events.back()["intended_effect"] == "crack", "Short Q press emits exactly one crack")
 	await process_frame
-	Input.action_press("echo_primary")
+	Input.action_press("echo_personal")
 	controls._physics_process(0.01)
 	await process_frame
 	controls._physics_process(0.4)
-	Input.action_release("echo_primary")
+	Input.action_release("echo_personal")
 	controls._physics_process(0.01)
 	check(input_events.size() == 2 and input_events.back()["intended_effect"] == "move", "Held Q emits move without also cracking")
 	await process_frame
-	Input.action_press("echo_primary")
+	Input.action_press("echo_personal")
 	controls._physics_process(0.01)
 	controls.cancel()
 	await process_frame
-	Input.action_release("echo_primary")
+	Input.action_release("echo_personal")
 	controls._physics_process(0.01)
 	check(input_events.size() == 2, "Cancelled hold applies no effect")
 	input_echo.free()

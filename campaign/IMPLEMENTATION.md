@@ -11,14 +11,14 @@ it does **not** claim to reproduce the illustrated reference assets exactly.
 | --- | --- | --- |
 | `scripts/player/player.gd`, `integration/player_adapter.gd` | Movement, jump, swimming, glide, dash, camera input, checkpoint respawn | Instantiate existing player; replace visible meshes; configure spring arm |
 | `systems/echo/echo_system.gd` | Stones, generation/inheritance, selection, cooldown, request/response | Persistent instance with `enforce_story_order`; public `collect_stone`, `begin_generation` |
-| `systems/echo/echo_input.gd`, `integration/input_adapter.gd`, `echo_wheel.gd` | Aim, tap/hold, wheel, Q/E/X | Existing input/wheel; replace preview mesh only |
-| `systems/combat/combat_enemy.gd`, `combat_system.gd`, `integration/combat_bridge.gd` | Health, guard, enemy AI, effect validation/status | Visual subclass, existing bridge and identical close-strike contract |
-| `earth_target.gd`, `integration/earth_adapter.gd`, `demo/environment_target.gd` | Rock/platform placement, wind/water/time world behavior | Visual subclasses and unchanged acknowledged event routing |
+| `systems/echo/echo_input.gd`, `integration/input_adapter.gd`, `echo_wheel.gd` | Aim, contextual Q/E actions, wheel, cancellation | Q selects a summoned ancestor; E always calls the personal power; aimed puzzle/environment targets outrank nearby enemies |
+| `systems/combat/combat_enemy.gd`, `combat_system.gd`, `integration/combat_bridge.gd` | Health, guard, enemy AI, effect validation/status | Normal left-click attack remains; Echo casts add element-specific damage/status; armored guard requires Earth stun |
+| `earth_target.gd`, `integration/earth_adapter.gd`, `demo/environment_target.gd` | Rock/platform placement, wind/water/time world behavior | Campaign walls and raised platforms use the same Earth receiver; ice, updrafts, and gates change collision through existing acknowledged events |
 | `scripts/test/collectible_relic.gd` | Pickup and animation | Connect collection signal to five-scene counter |
 
-No source files in `systems/`, `scripts/`, `scenes/`, or `integration/` were
-edited by this implementation. The pre-existing local edit to
-`integration/team_game.tscn` is intentionally excluded from the commit.
+The implementation keeps existing Echo request/response and Combat/Traversal
+ownership seams. It updates their input dispatch, Echo combat result, target
+geometry, and campaign composition to enforce the intended power gates.
 
 ## Added files and phases
 
@@ -31,8 +31,9 @@ edited by this implementation. The pre-existing local edit to
   shirt, vest, backpack/bedroll, green pocketed pants and boots. Velocity-driven
   limb cycles, idle breath, airborne pose, landing compression, attack/interact
   gestures, hand socket and four cosmetic weapon silhouettes.
-- `presentation/echo_spirit.gd`: persistent Kip plus separately summoned ancestor;
-  Earth/Wind/Water/Time variants, bobbing and summon scaling.
+- `presentation/echo_spirit.gd`: discovered stone and the selected ancestor;
+  Earth/Wind/Water/Time variants, bobbing and summon scaling. The duplicate
+  lavender follower was removed from the campaign.
 - `presentation/effects.gd`: bounded 12-slot cast/impact pool. Effects only mark
   successful impacts after owner acknowledgement. No visual effect awards damage.
 - `presentation/crab.gd`: moss crabs and Sentinel, status tint, scuttle,
@@ -58,12 +59,12 @@ edited by this implementation. The pre-existing local edit to
 | Arrival | Defeat shore crab with close strikes; follow gold path to arch; F |
 | Earth Ruins | Defeat guard; F at Earth stone; E twice on rock; exit |
 | Overgrown Path | Tab summon Earth; Q twice on rock; Earth-stun Shellguard; defeat it |
-| Wind Cliffs | Earth-raise platform; use low step, platform, then high ledge; F Wind stone; E dash / hold E glide across gap; defeat guard |
-| Flooded Trail | Earth clear rock; select Wind and dash across channel; defeat guard |
-| Water Ruins | Earth clear rock; Wind dash to middle island; F Water stone; E freeze the next pool from its bank; defeat guard |
-| Forbidden Interior | Earth clear rock; Wind activate updraft; Water freeze pool; defeat guard |
-| Time Temple | Earth clear rock; Wind activate updraft; Water freeze pool; F Time stone; E stop moving relic; defeat guard |
-| Island Core | Raise Earth platform; activate Wind vent; freeze Water pool; stop Time relic; Earth-stun and defeat Sentinel; F at final arch |
+| Wind Cliffs | Q raises the Earth bridge to reach Wind; E dashes across the second unjumpable gap; defeat guard |
+| Flooded Trail | Q breaks the Earth wall; Wind dash crosses the physical channel; defeat guard |
+| Water Ruins | Break the Earth wall; Wind dash reaches the Water stone; E freezes the full-width pool bridge; defeat guard |
+| Forbidden Interior | Break the Earth wall; activate the updraft to reach the high ledge; freeze the Water crossing; defeat guard |
+| Time Temple | Earth, Wind and Water open the route; collect Time, then E opens the collision-blocking Time gate; defeat guard |
+| Island Core | Raise Earth bridge; activate Wind updraft; freeze Water crossing; open Time gate; Earth-stun the Sentinel before normal attacks; F at final arch |
 
 Generation changes occur only after Earth Ruins, Wind Cliffs, and Water Ruins.
 The Time power remains personal to generation four, as required by the existing
@@ -73,14 +74,15 @@ stay defeated during the scene, including after R; refresh/restart starts a new 
 
 ## Verification
 
-- Godot 4.7.2 desktop: campaign suite **122 checks, zero failures**; Echo **51**,
-  all-power **56**, integration **41**, and Combat suite passed.
+- Godot 4.7.2 desktop: campaign suite **183 checks, zero failures**; Echo **51**,
+  all-power **57**, integration **43**, and Combat suite passed.
 - Tests load all nine scenes, enforce stone prerequisites, use F collection,
   send actual requests through the existing receivers, verify success before
   progression, confirm generations/ancestral powers and final ending. These are
   automated contract tests, **not** a claimed uninterrupted human playthrough.
-  If a guard is defeated from behind before being stunned, the exit does not
-  require stunning its dead body; the existing Combat owner permits that strategy.
+  Geometry and collision checks verify each power gate changes state through its
+  existing receiver. Armored guards reject normal damage until their Echo stun;
+  regular attacks remain available and finish them after the guard breaks.
 - Real OpenGL captures of title, Arrival, Earth Ruins, and Core inspected.
   Fixed terrain skirt overlap, washed-out lighting, low-contrast notifications,
   objective panel overflow, and ungrounded decorative placement found in review.

@@ -3,6 +3,8 @@ extends StaticBody3D
 
 @export var target_id: String = ""
 @export_enum("rock", "ground", "discovery") var kind: String = "rock"
+@export var blocking_size: Vector3 = Vector3(1.5, 1.6, 1.4)
+@export var raised_size: Vector3 = Vector3(2.6, 1.5, 2.6)
 var damage: int = 0
 var form: String = "flat"
 var revealed: bool = false
@@ -32,18 +34,18 @@ func _ready() -> void:
 
 func dimensions(for_form: String = form) -> Vector3:
 	if kind == "rock":
-		return Vector3(1.5, 1.6, 1.4)
+		return blocking_size
 	if kind == "discovery":
 		return Vector3(2.2, 0.25, 2.2)
 	match for_form:
-		"platform": return Vector3(2.6, 1.5, 2.6)
+		"platform": return raised_size
 		"barrier": return Vector3(3.0, 2.6, 0.65)
 	return Vector3(2.6, 0.12, 2.6)
 
 
 func action_for(held: bool) -> String:
 	if kind == "rock":
-		return "" if damage >= 2 else ("move" if held else "crack")
+		return "" if damage >= 2 else ("move" if held and blocking_size.x <= 4.0 else "crack")
 	if kind == "discovery":
 		return "" if revealed else "reveal"
 	if form != "flat":
@@ -53,7 +55,7 @@ func action_for(held: bool) -> String:
 
 func prompt() -> String:
 	if kind == "rock":
-		return "Tap: %s  |  Hold: move rock" % ("break" if damage == 1 else "crack")
+		return "Break Earth wall" if blocking_size.x > 4.0 else "Break rock"
 	if kind == "discovery":
 		return "Discovery revealed" if revealed else "Tap: uncover buried entrance"
 	return "Tap: lower structure" if form != "flat" else "Tap: platform  |  Hold: barrier"
@@ -160,7 +162,7 @@ func _refresh() -> void:
 	collision_layer = 1 if visible else 0
 	collision_mask = 1
 	caption.position.y = size.y + 0.45
-	caption.text = "ROCK" if kind == "rock" else ("EARTH" if kind == "ground" else "BURIED MEMORY")
+	caption.text = ("EARTH WALL" if blocking_size.x > 4.0 else "ROCK") if kind == "rock" else ("EARTH" if kind == "ground" else "BURIED MEMORY")
 	if kind == "rock" and damage == 1:
 		caption.text = "CRACKED ROCK"
 	if kind == "discovery" and revealed:

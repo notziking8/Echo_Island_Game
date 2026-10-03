@@ -7,9 +7,10 @@ On `main`, open `project.godot` in Godot 4.7.2 and press **F5** for the new titl
 screen and nine-scene campaign. Press any key/click to start. Powers are discovered
 in story order; they are not all unlocked at the beginning.
 
-WASD/arrows move, mouse looks, Space jumps, left click strikes a targeted enemy
-within 3m. Hold Tab for the Echo wheel; Q uses the selected power; E uses your
-generation's personal power. F collects nearby awakened stones and continues
+WASD/arrows move, mouse looks, Space jumps, left click remains the normal strike
+against a targeted enemy within 3m. Hold Tab to summon an ancestor; Q uses that
+Echo, and E always uses your current personal power. Aim at a required object or
+approach an enemy: the on-screen Q/E hints show the contextual Echo action. F collects nearby awakened stones and continues
 through completed exit arches. X dismisses, R respawns, Esc releases the mouse.
 Five optional relics are spread across Arrival, Overgrown Path, Flooded Trail,
 Forbidden Interior, and Island Core.
@@ -40,8 +41,9 @@ Combat project. This is a development playtest, not a finished release.
 3. Press **F5**. The main scene is `integration/team_game.tscn`.
 
 All powers start unlocked. Arrow keys or WASD move, mouse looks, and Space jumps.
-Hold **Tab**, choose with the mouse or arrows, and release to select a power.
-**Q** uses the selected power; **E** uses personal Time. **F** interacts,
+Hold **Tab**, choose an ancestor with the mouse or arrows, and release to select.
+**Q** uses that Echo; **E** uses personal Time. Both buttons adapt to the aimed
+environment target or nearby enemy, while left click remains the normal strike. **F** interacts,
 **X** dismisses an ancestor, and **R** respawns at the checkpoint. **Esc** frees
 or captures the mouse. Left-click within three units strikes an enemy.
 

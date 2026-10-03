@@ -38,22 +38,15 @@ func _ready() -> void:
 
 
 func echo_action(element: String, _held: bool = false) -> String:
-	match archetype:
-		Archetype.SHELLGUARD, Archetype.RUIN_GUARDIAN:
-			return "stun" if element == "earth" else ""
-		Archetype.SKITTER:
-			return "push" if element == "wind" else ""
-		Archetype.SLINGER:
-			return "slow" if element == "time" else ""
-		_:
-			return "freeze" if element == "water" else ""
+	return {"earth": "stun", "wind": "push", "water": "freeze", "time": "slow"}.get(element, "")
 
 
 func apply_echo_event(event: Dictionary) -> bool:
 	if state == State.DEAD or event.get("target_id", "") != target_id:
 		return false
 	var effect := str(event.get("intended_effect", ""))
-	if effect != echo_action(str(event.get("echo_id", ""))):
+	var element := str(event.get("echo_id", ""))
+	if effect != echo_action(element):
 		return false
 	match effect:
 		"stun":
@@ -68,17 +61,24 @@ func apply_echo_event(event: Dictionary) -> bool:
 			_apply_status("push", 0.35)
 		_:
 			return false
+	var damage_scale := 0.45 if element == _weakness_for_archetype() else 0.18
+	take_damage(max_health * damage_scale, event.get("origin", Vector3.INF))
 	return true
+
+
+func _weakness_for_archetype() -> String:
+	match archetype:
+		Archetype.SHELLGUARD, Archetype.RUIN_GUARDIAN: return "earth"
+		Archetype.SKITTER: return "wind"
+		Archetype.SLINGER: return "time"
+		_: return "water"
 
 
 func take_damage(amount: float, attacker_position := Vector3.INF, heavy := false) -> bool:
 	if state == State.DEAD or amount <= 0.0:
 		return false
 	if guard_blocks_front and not guard_broken and not heavy and attacker_position.is_finite():
-		var to_attacker := attacker_position - global_position
-		to_attacker.y = 0.0
-		if to_attacker.length_squared() > 0.01 and -global_transform.basis.z.dot(to_attacker.normalized()) > 0.25:
-			return false
+		return false
 	if heavy and guard_blocks_front:
 		guard_broken = true
 		_apply_status("stun", 1.0)

@@ -16,7 +16,6 @@ var controls: Node
 var combat: Node
 var wheel: Control
 var lilo: Node3D
-var kip: Node3D
 var ancestor: Node3D
 var effects: Node3D
 var enemies: Array[Node] = []
@@ -31,10 +30,13 @@ var initialized := false
 var data: Dictionary
 var clouds: Array[Node3D] = []
 var elapsed := 0.0
+var pool_position := Vector3.ZERO
+var pool_size := Vector3(6, 0.12, 6)
 
 func _ready() -> void:
 	data = Catalog.STAGES[stage_index]
 	echo = manager.echo
+	_configure_layout()
 	InputMap.action_erase_events("interact")
 	var key := InputEventKey.new()
 	key.physical_keycode = KEY_F
@@ -65,8 +67,6 @@ func _ready() -> void:
 	canvas.add_child(wheel)
 	wheel.opened_changed.connect(func(open: bool): player.wheel_open = open)
 	controls.wheel = wheel
-	kip = Spirit.new()
-	add_child(kip)
 	ancestor = Spirit.new()
 	add_child(ancestor)
 	effects = preload("res://presentation/effects.gd").new()
@@ -86,21 +86,61 @@ func _ready() -> void:
 	message = ""
 	initialized = true
 
+
+func _configure_layout() -> void:
+	match stage_index:
+		3: exit_at = Vector3(0, 0, -42)
+		4: exit_at = Vector3(0, 0, -20)
+		5: exit_at = Vector3(0, 0, -38)
+		6: exit_at = Vector3(0, 0, -43)
+		7: exit_at = Vector3(0, 0, -64)
+		8: exit_at = Vector3(0, 0, -75)
+		_: exit_at = Vector3(0, 0, -24)
+
 func _build_landscape() -> void:
 	Art.lighting(self, stage_index == 8)
 	var ocean := Art.orb(self, Vector3(0, -4, -4), Vector3(240, 0.4, 240), Color("4fbdcb"))
 	ocean.name = "Ocean"
 	var split := stage_index >= 3
 	var water_ruins := stage_index == 5
-	Art.land(self, Vector3(0, 0, 5 if water_ruins else (4 if split else -2)), Vector3(26, 1, 22 if water_ruins else (32 if split else 54)))
-	if water_ruins:
-		# Wind crossing before discovery, then a separate Water crossing afterward.
-		Art.land(self, Vector3(0, 0, -10), Vector3(12, 1, 4), Art.GOLD.darkened(0.1))
-	if split:
-		Art.land(self, Vector3(0, 0, -23), Vector3(18, 1, 16))
-	if stage_index >= 5:
-		Art.land(self, Vector3(0, -2.5, -13.5), Vector3(9, 1, 8), Color("c1b794"))
-		_add_environment("pool", "pool", Vector3(0, 0, -14.5 if water_ruins else -13.5))
+	if stage_index == 3:
+		Art.land(self, Vector3(0, 0, 7), Vector3(28, 1, 22))
+		Art.land(self, Vector3(0, 0, -20), Vector3(18, 1, 14))
+		Art.land(self, Vector3(0, 0, -42), Vector3(18, 1, 12))
+	elif stage_index == 4:
+		Art.land(self, Vector3(0, 0, 7), Vector3(28, 1, 22))
+		Art.land(self, Vector3(0, 0, -20), Vector3(18, 1, 14))
+	elif stage_index == 5:
+		Art.land(self, Vector3(0, 0, 7), Vector3(28, 1, 22))
+		Art.land(self, Vector3(0, 0, -17), Vector3(18, 1, 8), Art.GOLD.darkened(0.1))
+		Art.land(self, Vector3(0, 0, -38), Vector3(22, 1, 16))
+		pool_position = Vector3(0, 0, -25.5)
+		pool_size = Vector3(12, 0.12, 9)
+		_add_environment("pool", "pool", pool_position, pool_size)
+	elif stage_index in [6, 7]:
+		Art.land(self, Vector3(0, 0, 7), Vector3(28, 1, 22))
+		Art.land(self, Vector3(0, 3.5, -18), Vector3(26, 1, 16), Art.GOLD.darkened(0.08))
+		Art.land(self, Vector3(0, 0, -43), Vector3(22, 1, 16))
+		if stage_index == 7:
+			Art.land(self, Vector3(0, 0, -64), Vector3(22, 1, 16), Art.GOLD.darkened(0.05))
+		pool_position = Vector3(0, 0, -30.5)
+		pool_size = Vector3(12, 0.12, 9)
+		_add_environment("pool", "pool", pool_position, pool_size)
+	elif stage_index == 8:
+		Art.land(self, Vector3(0, 0, 7), Vector3(28, 1, 22))
+		Art.land(self, Vector3(0, 0, -18), Vector3(18, 1, 10), Art.GOLD.darkened(0.1))
+		Art.land(self, Vector3(0, 3.5, -32), Vector3(26, 1, 16), Art.GOLD.darkened(0.08))
+		Art.land(self, Vector3(0, 0, -60), Vector3(24, 1, 18))
+		Art.land(self, Vector3(0, 0, -75), Vector3(24, 1, 12), Art.GOLD.darkened(0.05))
+		pool_position = Vector3(0, 0, -42.5)
+		pool_position.z = -44.5
+		pool_size = Vector3(12, 0.12, 9)
+		_add_environment("pool", "pool", pool_position, pool_size)
+	else:
+		Art.land(self, Vector3(0, 0, -2), Vector3(32, 1, 54))
+		if stage_index >= 5:
+			Art.land(self, Vector3(0, -2.5, -13.5), Vector3(9, 1, 8), Color("c1b794"))
+			_add_environment("pool", "pool", Vector3(0, 0, -13.5), pool_size)
 	# Continuous warm path on each shore; gaps remain readable rather than disguised.
 	for i in 22:
 		var z := 17.0 - i * 1.85
@@ -158,7 +198,7 @@ func _build_biome_details() -> void:
 					Art.orb(vine_arch, Vector3(-2.2 + j * 0.7, 4 + sin(j) * 0.4, 0), Vector3(0.13, 1.8, 0.16), Art.GRASS.darkened(0.3))
 		3:
 			for i in 4:
-				Art.land(self, Vector3(-16 + i * 11, -0.5 + i * 0.6, -35 - i % 2 * 7), Vector3(6, 1, 7), Art.GOLD.darkened(0.13))
+				Art.orb(self, Vector3(-17 + i * 11, 1.2 + i * 0.6, -33 - i % 2 * 7), Vector3(6, 0.5, 7), Art.GOLD.darkened(0.13))
 		4, 5:
 			for side in [-1, 1]:
 				Art.orb(self, Vector3(side * 12, -0.8, -9), Vector3(2.8, 0.18, 21), Art.SKY.darkened(0.1))
@@ -175,31 +215,37 @@ func _build_encounter() -> void:
 	var enemy := Enemy.new()
 	enemy.target_id = "stage_%d_guard" % stage_index
 	enemy.archetype = data.enemy
-	enemy.position = Vector3(0, 0.1, -20 if stage_index == 8 else 9)
+	enemy.position = Vector3(0, 0.1, exit_at.z if stage_index == 8 else 9)
 	enemy.target = player
 	enemy.detection_range = 6
 	add_child(enemy)
 	enemies.append(enemy)
 	if "crack" in data.tasks:
-		_add_earth("rock", "rock", Vector3(0, 0.02, 3))
+		var wall := _add_earth("rock", "rock", Vector3(0, 0.02, 3))
+		wall.set("blocking_size", Vector3(36, 6, 1.6))
+		wall.call("_refresh")
 	if "raise_platform" in data.tasks:
-		_add_earth("platform", "ground", Vector3(3, 0.02, 0))
-		Art.land(self, Vector3(3, 0.6, 2.1), Vector3(2.0, 1, 1.5), Art.GOLD)
+		var platform_at := Vector3(0, -1.5, -8.5) if stage_index in [3, 8] else Vector3(3, 0.02, 0)
+		var platform := _add_earth("platform", "ground", platform_at)
+		platform.set("raised_size", Vector3(8, 1.5, 7) if stage_index in [3, 8] else Vector3(2.6, 1.5, 2.6))
+		platform.set("require_ground_support", false)
+		platform.call("_refresh")
 	if "wind_current" in data.tasks:
-		_add_environment("vent", "vent", Vector3(-2.5, 0.04, -3))
+		var vent_at := Vector3(0, 0.04, -5) if stage_index in [6, 7] else Vector3(0, 0.04, -18)
+		_add_environment("vent", "vent", vent_at, Vector3(7, 0.15, 7))
 	if "freeze_object" in data.tasks:
-		_add_environment("clockwork", "clockwork", Vector3(-3, 0.04, -18))
+		var gate_z := -53.5 if stage_index == 7 else -65.0
+		_add_environment("clockwork", "clockwork", Vector3(0, 2.5, gate_z), Vector3(30, 5, 1.2))
 	if not data.stone.is_empty():
 		stone = Spirit.new()
 		stone.element = data.stone
 		stone.position = Vector3(3, 1.2, 5)
 		if stage_index == 3:
-			Art.land(self, Vector3(3, 2.2, -2.5), Vector3(4, 1, 3.5), Art.GOLD)
-			stone.position = Vector3(3, 3.2, -2.5)
+			stone.position = Vector3(3, 1.2, -20)
 		elif stage_index == 5:
-			stone.position = Vector3(0, 1.2, -10)
+			stone.position = Vector3(0, 1.2, -17)
 		elif stage_index == 7:
-			stone.position = Vector3(3, 1.2, -7)
+			stone.position = Vector3(3, 1.2, -43)
 		add_child(stone)
 		Art.ring(self, stone.position - Vector3.UP * 0.8, 0.75, Art.GOLD)
 	if stage_index in [0, 2, 4, 6, 8] and not manager.relic_stages.has(stage_index):
@@ -216,28 +262,34 @@ func _build_encounter() -> void:
 		relic.relic_collected.connect(func(_relic): manager.collect_relic(stage_index))
 		add_child(relic)
 
-func _add_earth(id: String, kind: String, at: Vector3) -> void:
+func _add_earth(id: String, kind: String, at: Vector3) -> Node:
 	var object := Earth.new()
 	object.target_id = id
 	object.kind = kind
 	object.position = at
 	add_child(object)
 	targets[id] = object
+	return object
 
-func _add_environment(id: String, kind: String, at: Vector3) -> void:
+func _add_environment(id: String, kind: String, at: Vector3, size: Vector3 = Vector3.ZERO) -> Node:
 	var object := EnvironmentTarget.new()
 	object.target_id = id
 	object.kind = kind
+	object.custom_size = size
 	object.position = at
 	add_child(object)
 	targets[id] = object
+	return object
 
 func _refresh_echo() -> void:
 	ancestor.visible = not echo.active_echo.is_empty()
 	if ancestor.visible:
 		ancestor.set_element(echo.active_echo)
-	if not echo.selected_power().is_empty():
-		lilo.set_weapon(echo.selected_power())
+	var visible_power: String = echo.selected_power()
+	if visible_power.is_empty():
+		visible_power = echo.personal_power()
+	if not visible_power.is_empty():
+		lilo.set_weapon(visible_power)
 
 func _ability_started(event: Dictionary) -> void:
 	pending_events[event.request_id] = event.duplicate()
@@ -252,7 +304,8 @@ func _ability_finished(response: Dictionary) -> void:
 		if objective_applied and event.intended_effect not in completed:
 			completed.append(event.intended_effect)
 		effects.burst(event.position, event.echo_id)
-		message = "The island responds: " + str(event.intended_effect).replace("_", " ") + "."
+		var effect_label: String = {"stun": "stuns the enemy", "push": "pushes the enemy", "freeze": "freezes the enemy", "slow": "slows the enemy", "crack": "breaks the Earth wall", "raise_platform": "raises the Earth bridge", "air_dash": "carries you across with Wind", "wind_current": "opens the Wind updraft", "freeze_water": "freezes the Water crossing", "freeze_object": "slows time and opens the gate"}.get(event.intended_effect, str(event.intended_effect).replace("_", " "))
+		message = str(event.echo_id).capitalize() + " Echo: " + effect_label + "."
 	else:
 		message = "No effect here. Check your power, aim, distance, and whether the destination is clear."
 
@@ -277,13 +330,30 @@ func enemies_defeated() -> bool:
 func missing_tasks() -> Array[String]:
 	var missing: Array[String] = []
 	for task: String in data.tasks:
-		# A player can defeat a guarded enemy from behind using the unchanged owner.
-		# Never demand a status effect on an already-dead, ineligible receiver.
-		if task == "stun" and enemies_defeated():
-			continue
 		if task not in completed:
 			missing.append(task)
 	return missing
+
+func current_objective() -> String:
+	if not enemies_defeated():
+		for enemy in enemies:
+			if enemy.health > 0 and "stun" in data.tasks and "stun" not in completed and enemy.guard_blocks_front and not enemy.guard_broken:
+				return "Stun the enemy with Earth"
+		return "Defeat the enemy"
+	if not data.stone.is_empty() and data.stone not in echo.collected_stones and can_collect_stone():
+		return "Awaken the %s stone" % str(data.stone).capitalize()
+	for task: String in data.tasks:
+		if task not in completed:
+			return {
+				"crack": "Break the Earth wall",
+				"raise_platform": "Raise the Earth bridge",
+				"air_dash": "Use Wind to cross the gap",
+				"wind_current": "Activate the Wind updraft",
+				"freeze_water": "Freeze the Water crossing",
+				"freeze_object": "Use Time to slow the gate",
+				"stun": "Stun the enemy with Earth"
+			}.get(task, task.replace("_", " ").capitalize())
+	return "Reach the arch and continue"
 
 func can_exit() -> bool:
 	return enemies_defeated() and missing_tasks().is_empty() and (data.stone.is_empty() or data.stone in echo.collected_stones)
@@ -355,7 +425,6 @@ func _process(delta: float) -> void:
 		return
 	elapsed += delta
 	hit_cooldown = maxf(0, hit_cooldown - delta)
-	kip.global_position = kip.global_position.lerp(player.global_position + Vector3(0.9, 1.5, 0.4), minf(delta * 8, 1))
 	ancestor.global_position = ancestor.global_position.lerp(player.global_position + Vector3(-0.9, 1.65, 0.4), minf(delta * 7, 1))
 	for i in clouds.size():
 		clouds[i].position.x += delta * 0.12
