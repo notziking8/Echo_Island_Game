@@ -35,6 +35,22 @@ func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 
 
+func transition_to(new_state: MovementState) -> void:
+	if new_state == MovementState.MANTLING:
+		dash_remaining = 0.0
+		glide_remaining = 0.0
+	super.transition_to(new_state)
+
+
+func _process_sliding(delta: float) -> void:
+	if wheel_open:
+		transition_to(MovementState.GROUNDED)
+		velocity.x = 0
+		velocity.z = 0
+		return
+	super._process_sliding(delta)
+
+
 func _apply_horizontal_movement(delta: float) -> void:
 	if wheel_open:
 		velocity.x = 0

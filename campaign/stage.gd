@@ -43,6 +43,7 @@ func _ready() -> void:
 	player = preload("res://scenes/player/player.tscn").instantiate()
 	player.set_script(preload("res://integration/player_adapter.gd"))
 	player.position = Vector3(0, 0.15, 16)
+	player.echo_system = echo
 	add_child(player)
 	player.spring_arm.spring_length = 6.3
 	player.spring_arm.rotation.x = deg_to_rad(-22)

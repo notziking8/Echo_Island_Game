@@ -44,6 +44,7 @@ func _ready() -> void:
 	echo = Echo.new()
 	echo.name = "EchoSystem"
 	add_child(echo)
+	player.echo_system = echo
 	echo.unlock_all()
 	echo.summon("earth")
 	controls = IntegratedInput.new()
